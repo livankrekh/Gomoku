@@ -27,10 +27,18 @@ Window {
                 var newY = iY * 30 + 5 - Math.floor(iY * 0.15)
                 var sourceImg = movePlayer == 1 ? '"imgs/white.png"}' : '"imgs/black.png"}';
 
+                if (iX < 0 || iY < 0) {
+                    return ;
+                }
+
+                if (!game.setMove(iX, iY, movePlayer)) {
+                    return ;
+                }
+
                 Qt.createQmlObject('import QtQuick 2.9; Image {width: 20; height: 20; x: ' + newX + '; y: ' + newY + '; source: ' + sourceImg, board);
 
                 movePlayer -= movePlayer * 2
-                playerText.text = movePlayer == 1 ? qsTr("White") : qsTr("Black");
+                playerText.text = movePlayer == 1 ? qsTr("white") : qsTr("black");
             }
         }
     }
@@ -47,11 +55,11 @@ Window {
 
     Text {
         id: playerText
-        x: 723
+        x: 740
         y: 25
         width: 58
         height: 22
-        text: qsTr("White")
+        text: qsTr("white")
         font.pixelSize: 21
     }
 }
