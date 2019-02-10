@@ -9,8 +9,6 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-//    qmlRegisterType<GomokuGame>("gomoku.process", 1, 0, "GameProcess");
-
     GomokuGame game;
 
     QQmlApplicationEngine engine;
