@@ -64,6 +64,10 @@ Window {
                     return ;
                 }
 
+                if (game.checkTwoThrees(iX, iY, movePlayer)) {
+                    return ;
+                }
+
                 if (!game.setMove(iX, iY, movePlayer)) {
                     return ;
                 }
