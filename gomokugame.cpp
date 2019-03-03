@@ -131,9 +131,18 @@ bool GomokuGame::checkWin(int x, int y, int player)
     }
 
     all_variants ai_move;
-    ai_move = _find_MF(player * -1, 5, 3, matrix);
-    setMove(ai_move._x, ai_move._y, ai_move.num);
+
+    clock_t begin = clock();
+    ai_move = _find_MF(player * -1, 3, 5, matrix);
+    clock_t end = clock();
+
+    if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
+        return false;
+    }
     matrixChanged(ai_move._x, ai_move._y, ai_move.num);
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+    reactionChanged(elapsed_secs);
 
     return false;
 }
@@ -195,9 +204,9 @@ bool GomokuGame::checkTwoThrees(int x, int y, int player)
     if (res == 0) return false;
     if (res >= 2) return true;
 
-//    if (!threes[player == -1 ? 0 : 1].active) {
-//        return false;
-//    }
+    if (!threes[player == -1 ? 0 : 1].active) {
+        return false;
+    }
 
     if (threes[player == -1 ? 0 : 1].active &&
         threes[player == -1 ? 0 : 1].x1 == x &&
@@ -235,6 +244,13 @@ bool GomokuGame::checkPairRule(int x, int y, int player)
                 result = true;
             }
         }
+    }
+
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++) {
+            std::cout << matrix[i][j] << " ";
+        }
+        std::cout << std::endl;
     }
 
     return result;
@@ -422,8 +438,8 @@ all_variants	GomokuGame::_find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH
     make_childs(first_node, MAX_DEPTH, MAX_WIDTH, START_PLAYER);
     all_variants ret;
     ret.num = START_PLAYER;
-    ret._x = first_node->x;
-    ret._y = first_node->y;
+    ret._x = first_node->y;
+    ret._y = first_node->x;
     printf("HER %lu\n", first_node->heuristics);
     printf("x:%d y:%d\n", first_node->x, first_node->y);
 //    printf("AOjv isdhjfbvokhdfbohadoibjis\n");

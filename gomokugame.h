@@ -9,6 +9,7 @@
 # include <stdlib.h>
 # include <string>
 # include <fstream>
+# include <ctime>
 
 #define GOBAN_SIZE 19
 
@@ -81,6 +82,7 @@ public:
 
 signals:
     void matrixChanged(int x, int y, int val);
+    void reactionChanged(double time);
 
 private:
     std::vector<std::vector<int>>   matrix;

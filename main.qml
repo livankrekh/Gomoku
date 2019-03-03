@@ -28,8 +28,12 @@ Window {
                 var newY = y * 30 + 5 - Math.floor(y * 0.15)
 
                 if (val == 0) {
+                    console.log("Pair delete: x -> ", newX, ", y -> ", newY);
+
                     for (var i = 0; i < stack.length; i++) {
                         if (Math.abs(stack[i].x - newX) < 10 && Math.abs(stack[i].y - newY) < 10) {
+                            console.log(stack[i].x, stack[i].y);
+                            stack[i].visible = false;
                             stack[i].destroy();
                             stack.splice(i, 1);
                             return ;
@@ -44,6 +48,10 @@ Window {
                     playerText.text = movePlayer == 1 ? qsTr("white") : qsTr("black");
                 }
 
+            }
+
+            onReactionChanged: {
+                moveTimestamp.text = qsTr("AI reaction time: " + time);
             }
         }
 
@@ -124,5 +132,15 @@ Window {
         height: 22
         text: qsTr("white")
         font.pixelSize: 21
+    }
+
+    Text {
+        id: moveTimestamp
+        x: 606
+        y: 500
+        width: 58
+        height: 22
+        text: qsTr("AI reaction time: ")
+        font.pixelSize: 18
     }
 }
