@@ -20,6 +20,8 @@ GomokuGame::GomokuGame() : QObject()
     current_player = -1;
     threes.push_back( Three(-1,-1,-1,-1,0,0) );
     threes.push_back( Three(-1,-1,-1,-1,0,0) );
+    twoRuleCount[0] = 0;
+    twoRuleCount[1] = 0;
 }
 
 GomokuGame::~GomokuGame()
@@ -118,6 +120,10 @@ bool GomokuGame::checkVal(int x, int y, int val)
 
 bool GomokuGame::checkWin(int x, int y, int player)
 {
+    if (twoRuleCount[player == -1 ? 0 : 1] >= 5) {
+        return true;
+    }
+
     for (int dirY = -1; dirY <= 1; dirY++) {
         for (int dirX = -1; dirX <= 1; dirX++) {
             if (dirY == 0 && dirX == 0) {
@@ -133,7 +139,7 @@ bool GomokuGame::checkWin(int x, int y, int player)
     all_variants ai_move;
 
     clock_t begin = clock();
-    ai_move = _find_MF(player * -1, 3, 5, matrix);
+    ai_move = _find_MF(player * -1, 5, 3, matrix);
     clock_t end = clock();
 
     if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
@@ -143,6 +149,7 @@ bool GomokuGame::checkWin(int x, int y, int player)
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
     reactionChanged(elapsed_secs);
+    checkPairRule(ai_move._x, ai_move._y, ai_move.num);
 
     return false;
 }
@@ -198,9 +205,6 @@ bool GomokuGame::checkTwoThrees(int x, int y, int player)
         }
     }
 
-    std::cout << "Check threes - " << res << std::endl;
-    std::cout << "x - " << x << ", x2 - " << x2 << ", y - " << y << ", y2 - " << y2 << std::endl;
-
     if (res == 0) return false;
     if (res >= 2) return true;
 
@@ -241,20 +245,27 @@ bool GomokuGame::checkPairRule(int x, int y, int player)
                 matrix[y + 2 * dirY][x + 2 * dirX] = 0;
                 matrixChanged(x + 1 * dirX, y + 1 * dirY, 0);
                 matrixChanged(x + 2 * dirX, y + 2 * dirY, 0);
+                twoRuleCount[player == -1 ? 0 : 1] += 1;
                 result = true;
             }
         }
     }
 
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            std::cout << matrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-
     return result;
 }
+
+
+
+
+
+// Algorithm part
+// Decision three with min-max algorithm
+
+
+
+
+
+
 
 using namespace std;
 
@@ -282,7 +293,6 @@ void	most_best_variant(node *nde){
         for (int y = 0; y < nde->size; ++y){
             tmp_map_not_you = nde->cross_map_not_you[x][y];
             tmp_map = nde->cross_map[x][y];
-            // printf("%d %d\n",tmp_map, tmp_map_not_you );
             if (tmp_map != 0){
                 for_tmp = 1;
                 while(tmp_map-- > 1)
@@ -309,12 +319,53 @@ void	most_best_variant(node *nde){
 
 node *	create_node(node *parent, int x, int y){
     node *child = new node;//create template width**depth
-
     child->map_in_node = parent->map_in_node;
     child->map_in_node[x][y] = parent->now_player;
+    child->size = child->map_in_node.size();
     child->x = x;
     child->y = y;
-    child->size = child->map_in_node.size();
+
+    if (y > 2 and child->map_in_node[x][y - 1] != 0 and child->map_in_node[x][y - 1] == child->map_in_node[x][y - 2] and child->map_in_node[x][y - 2] != parent->now_player and child->map_in_node[x][y - 3] == parent->now_player){
+        child->map_in_node[x][y-1] = 0;
+        child->map_in_node[x][y-2] = 0;
+    }//left
+    if (y < (child->size - 3) and child->map_in_node[x][y + 1] != 0 and child->map_in_node[x][y + 1] == child->map_in_node[x][y + 2] and child->map_in_node[x][y + 2] != parent->now_player and child->map_in_node[x][y + 3] == parent->now_player){
+        child->map_in_node[x][y+1] = 0;
+        child->map_in_node[x][y+2] = 0;
+    }//right
+    if (x > 2 and child->map_in_node[x-1][y] != 0 and child->map_in_node[x-1][y] == child->map_in_node[x-2][y] and child->map_in_node[x-2][y] != parent->now_player and child->map_in_node[x-3][y] == parent->now_player){
+        child->map_in_node[x-1][y] = 0;
+        child->map_in_node[x-2][y] = 0;
+    }//up
+    if (x < (child->size - 3) and child->map_in_node[x+1][y] != 0 and child->map_in_node[x+1][y] == child->map_in_node[x+2][y] and child->map_in_node[x+2][y] != parent->now_player and child->map_in_node[x+3][y] == parent->now_player){
+        child->map_in_node[x+1][y] = 0;
+        child->map_in_node[x+2][y] = 0;
+    }//right
+
+    if (x > 2 and y > 2 and child->map_in_node[x-1][y-1] != 0 and child->map_in_node[x-1][y-1] == child->map_in_node[x-2][y-2] and child->map_in_node[x-2][y-2] != parent->now_player and child->map_in_node[x-3][y-3] == parent->now_player){
+        child->map_in_node[x-1][y-1] = 0;
+        child->map_in_node[x-2][y-2] = 0;
+    }//left_up
+
+
+    if (x < (child->size - 3) and y < (child->size - 3) and child->map_in_node[x+1][y+1] != 0 and child->map_in_node[x+1][y+1] == child->map_in_node[x+2][y+2] and child->map_in_node[x+2][y+2] != parent->now_player and child->map_in_node[x+3][y+3] == parent->now_player){
+        child->map_in_node[x+1][y+1] = 0;
+        child->map_in_node[x+2][y+2] = 0;
+    }//right down
+
+
+    if (x > 2 and y < (child->size - 3) and child->map_in_node[x-1][y+1] != 0 and child->map_in_node[x-1][y+1] == child->map_in_node[x-2][y+2] and child->map_in_node[x-2][y+2] != parent->now_player and child->map_in_node[x-3][y+3] == parent->now_player){
+        child->map_in_node[x-1][y+1] = 0;
+        child->map_in_node[x-2][y+2] = 0;
+    }//right_up
+
+
+    if (y > 2 and x < (child->size - 3) and child->map_in_node[x+1][y-1] != 0 and child->map_in_node[x+1][y-1] == child->map_in_node[x+2][y-2] and child->map_in_node[x+2][y-2] != parent->now_player and child->map_in_node[x+3][y-3] == parent->now_player){
+        child->map_in_node[x+1][y-1] = 0;
+        child->map_in_node[x+2][y-2] = 0;
+    }//left down
+
+
     child->now_player = parent->other_player;
     child->other_player = parent->now_player;
     child->cross_map = child->map_in_node;
@@ -346,10 +397,8 @@ void			return_heuristic(node *child, int START_PLAYER){
 void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int START_PLAYER){
     if (parent->level_depth == MAX_DEPTH){
         return_heuristic(parent, START_PLAYER);
-//         printf("return_heuristic %lu\n", parent->heuristics);
         return;
     }
-//     printf("make_childs1\n");
     node *child_tmp;
     int width = MAX_WIDTH;
     row(parent, false);// if we have 2 free flangs its 2 point if 1 free flang - 1 point ?
@@ -366,15 +415,10 @@ void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int STA
         if (width > 0 and this->checkRules(parent->variants[i]._x, parent->variants[i]._y, parent->now_player)){
             child_tmp = create_node(parent, parent->variants[i]._x, parent->variants[i]._y);
             width--;
-            // printf("\ndep = %d   x=%d y=%d\n\n", child_tmp->level_depth, parent->variants[i]._x, parent->variants[i]._y);
-            // _print(child_tmp->map_in_node);
         }
     }
 
     for (int i = 0; i < parent->nodes.size(); ++i){
-        // printf("child num %d create child-child\n", i);
-        // printf("in parent childe num %d\n", i);
-        // _print(parent->nodes[i]->map_in_node);
         make_childs(parent->nodes[i], MAX_DEPTH, MAX_WIDTH, START_PLAYER);
     }
 
@@ -387,7 +431,6 @@ void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int STA
 
     if (parent->now_player == START_PLAYER)
         maximaze = false;
-    // printf("find maxH\n");
     for (int i = 0; i < parent->nodes.size(); ++i){
         // check have we heuristics
         limit_tmp = parent->nodes[i]->heuristics;
@@ -408,7 +451,6 @@ void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int STA
             }
         }
     }
-    // printf("limit %d %d %d\n", limit, x, y);
     parent->heuristics = limit;
     if (parent->level_depth == 0){
         parent->x = x;
@@ -434,15 +476,11 @@ all_variants	GomokuGame::_find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH
         for (int y = 0; y < first_node->size; ++y)
             first_node->cross_map[x][y] = 0;
     first_node->cross_map_not_you = first_node->cross_map;
-    printf("\nmakechild start\n");
     make_childs(first_node, MAX_DEPTH, MAX_WIDTH, START_PLAYER);
     all_variants ret;
     ret.num = START_PLAYER;
     ret._x = first_node->y;
     ret._y = first_node->x;
-    printf("HER %lu\n", first_node->heuristics);
-    printf("x:%d y:%d\n", first_node->x, first_node->y);
-//    printf("AOjv isdhjfbvokhdfbohadoibjis\n");
     return ret;
 }
 
@@ -532,10 +570,16 @@ vector<int>	check_not_you(vector<int>  tmp, node *now_node){
         {
             if(num)
             {
-                if (tmp[i] == 0)
+                if (tmp[i] == 0){
                     _new[i] = num > _new[i] ? num : _new[i];
-                if (left_i != -1)
+                    if (i > 2 and left_i == -1 and num == 2)//need for -1 1 1 0, if we have flang not our
+                        _new[i] = 3 > _new[i] ? 3 : _new[i];
+                }
+                if (left_i != -1){
                     _new[left_i] = num > _new[left_i] ? num : _new[left_i];
+                    if (tmp[i] != 0 and tmp[i] == now_node->now_player and num == 2)//need for 0 1 1 -1, if we have flang not our
+                        _new[left_i] = 3 > _new[left_i] ? 3 : _new[left_i];
+                }
             }
             left_i = -1;
             num = 0;
@@ -563,10 +607,16 @@ vector<int>	check(vector<int>  tmp, node *now_node){
         {
             if(num)
             {
-                if (tmp[i] == 0)
+                if (tmp[i] == 0){
                     _new[i] = num > _new[i] ? num : _new[i];
-                if (left_i != -1)
+                    if (i > 2 and left_i == -1 and num == 2)//need for -1 1 1 0, if we have flang not our
+                        _new[i] = 3 > _new[i] ? 3 : _new[i];
+                }
+                if (left_i != -1){
                     _new[left_i] = num > _new[left_i] ? num : _new[left_i];
+                    if (tmp[i] != 0 and tmp[i] != now_node->now_player and num == 2)
+                        _new[left_i] = 3 > _new[left_i] ? 3 : _new[left_i];
+                }
             }
             left_i = -1;
             num = 0;
@@ -575,8 +625,10 @@ vector<int>	check(vector<int>  tmp, node *now_node){
 
     if(num and left_i != -1)
         _new[left_i] = num > _new[left_i] ? num : _new[left_i];
+
     return _new;
 }
+
 
 void	iterate_all_variants(node *nde, vector<int> &how_many_nums){
 
@@ -739,7 +791,6 @@ void	row(node *nde, bool you){
 
     }
 }
-
 
 void	column(node *nde, bool you){
     vector<int>  _new;

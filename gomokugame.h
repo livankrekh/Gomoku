@@ -76,8 +76,10 @@ public:
     bool checkRules(int x, int y, int player);
     void activateThree(int x, int y, int player);
     void deactivateThree(int x, int y, int player);
-    void make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int START_PLAYER);
 
+    // AI part
+
+    void make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int START_PLAYER);
     all_variants _find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH, std::vector<std::vector<int>> MAP);
 
 signals:
@@ -88,6 +90,7 @@ private:
     std::vector<std::vector<int>>   matrix;
     std::vector<Three>              threes;
     int                             current_player;
+    int                             twoRuleCount[2];
 };
 
 #endif // GOMOKUGAME_H
