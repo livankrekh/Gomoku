@@ -4,7 +4,7 @@ import QtQuick.Controls 2.2
 
 Window {
     visible: true
-    width: 900
+    width: 860
     height: 600
     title: qsTr("Gomoku")
 
@@ -75,10 +75,6 @@ Window {
                 var sourceImg = movePlayer == 1 ? '"imgs/white.png"}' : '"imgs/black.png"}';
 
                 if (iX < 0 || iY < 0) {
-                    return ;
-                }
-
-                if (game.checkTwoThrees(iX, iY, movePlayer)) {
                     return ;
                 }
 
@@ -178,6 +174,12 @@ Window {
         height: 47
         text: qsTr("Reverse game")
         font.pointSize: 22
+
+        onClicked: {
+            if (!game.moveAI(movePlayer)) {
+                return ;
+            }
+        }
     }
 
     Button {

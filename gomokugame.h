@@ -46,16 +46,15 @@ typedef struct			node
 struct Three
 {
 public:
-    Three(int x, int y, int x_end, int y_end, int dir_X, int dir_Y);
+    Three(int x, int y, int x_2, int y_2, int x_3, int y_3);
     ~Three();
 
     int         x1;
     int         y1;
     int         x2;
     int         y2;
-    int         dirX;
-    int         dirY;
-    int         space;
+    int         x3;
+    int         y3;
     bool        active;
 };
 

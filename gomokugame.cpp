@@ -1,6 +1,6 @@
 #include "gomokugame.h"
 
-Three::Three(int x, int y, int x_end, int y_end, int dir_X, int dir_Y) : x1(x), y1(y), x2(x_end), y2(y_end), dirX(dir_X), dirY(dir_Y), space(0), active(false)
+Three::Three(int x, int y, int x_2, int y_2, int x_3, int y_3) : x1(x), y1(y), x2(x_2), y2(y_2), x3(x_3), y3(y_3), active(false)
 {
 }
 
@@ -18,8 +18,8 @@ GomokuGame::GomokuGame() : QObject()
     }
 
     current_player = -1;
-    threes.push_back( Three(-1,-1,-1,-1,0,0) );
-    threes.push_back( Three(-1,-1,-1,-1,0,0) );
+    threes.push_back( Three(-1,-1,-1,-1,-1,-1) );
+    threes.push_back( Three(-1,-1,-1,-1,-1,-1) );
     twoRuleCount[0] = 0;
     twoRuleCount[1] = 0;
 }
@@ -30,65 +30,75 @@ GomokuGame::~GomokuGame()
 
 void GomokuGame::deactivateThree(int x, int y, int player)
 {
-    Three curr = threes[player == -1 ? 0 : 1];
+    Three null(-1,-1,-1,-1,-1,-1);
+    Three current = threes[player == -1 ? 0 : 1];
+    Three other = threes[player * -1 == -1 ? 0 : 1];
 
-    if ( (x == curr.x1 && y == curr.y1) ||
-         (x == curr.x2 && y == curr.y2) ) {
-        threes[player == -1 ? 0 : 1].active = false;
-    } else if ( (curr.x1 + curr.dirX * curr.space == x && curr.y1 + curr.dirY * curr.space == y) ) {
-        threes[player == -1 ? 0 : 1].active = false;
-    }
-}
-
-void GomokuGame::activateThree(int x, int y, int player)
-{
     for (int dirY = -1; dirY <= 1; dirY++) {
         for (int dirX = -1; dirX <= 1; dirX++) {
             if (dirY == 0 && dirX == 0) {
                 continue ;
             }
 
-            if (checkAlignment(x, y, dirX, dirY, 2, player) && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1) && !checkVal(x + -1 * dirX, y + -1 * dirY, player * -1)) {
-                if (checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
-                    threes[player == -1 ? 0 : 1].active = false;
-                } else {
-                    threes[player == -1 ? 0 : 1].active = true;
-                }
-                threes[player == -1 ? 0 : 1].x1 = x;
-                threes[player == -1 ? 0 : 1].y1 = y;
-                threes[player == -1 ? 0 : 1].x2 = x + 3 * dirX;
-                threes[player == -1 ? 0 : 1].y2 = y + 3 * dirY;
-                threes[player == -1 ? 0 : 1].dirX = dirX;
-                threes[player == -1 ? 0 : 1].dirY = dirY;
-            } else if (checkVal(x + dirX, y + dirY, 0) && checkAlignment(x + dirX, y + dirY, dirX, dirY, 2, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + -1 * dirX, y + -1 * dirY, player * -1)) {
-                if (checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
-                    threes[player == -1 ? 0 : 1].active = false;
-                } else {
-                    threes[player == -1 ? 0 : 1].active = true;
-                }
-                threes[player == -1 ? 0 : 1].x1 = x;
-                threes[player == -1 ? 0 : 1].y1 = y;
-                threes[player == -1 ? 0 : 1].x2 = x + 4 * dirX;
-                threes[player == -1 ? 0 : 1].y2 = y + 4 * dirY;
-                threes[player == -1 ? 0 : 1].dirX = dirX;
-                threes[player == -1 ? 0 : 1].dirY = dirY;
-                threes[player == -1 ? 0 : 1].space = 1;
-            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + 2 * dirX, y + 2 * dirY, 0) && checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
-                if (checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
-                    threes[player == -1 ? 0 : 1].active = false;
-                } else {
-                    threes[player == -1 ? 0 : 1].active = true;
-                }
-                threes[player == -1 ? 0 : 1].x1 = x;
-                threes[player == -1 ? 0 : 1].y1 = y;
-                threes[player == -1 ? 0 : 1].x2 = x + 4 * dirX;
-                threes[player == -1 ? 0 : 1].y2 = y + 4 * dirY;
-                threes[player == -1 ? 0 : 1].dirX = dirX;
-                threes[player == -1 ? 0 : 1].dirY = dirY;
-                threes[player == -1 ? 0 : 1].space = 2;
+            if (x + dirX == current.x1 && y + dirY == current.y1 && current.x2 - current.x1 == dirX && current.y2 - current.y1 == dirY) {
+                threes[player == -1 ? 0 : 1] = null;
+            } else if (x + dirX == current.x3 && y + dirY == current.y3 && current.x3 - current.x2 == dirX && current.y3 - current.y2 == dirY) {
+                threes[player == -1 ? 0 : 1] = null;
+            }
+            if (x + dirX == other.x1 && y + dirY == other.y1 && other.x2 - other.x1 == dirX && other.y2 - other.y1 == dirY) {
+                threes[player * -1 == -1 ? 0 : 1] = null;
+            } else if (x + dirX == other.x3 && y + dirY == other.y3 && other.x3 - other.x2 == dirX && other.y3 - other.y2 == dirY) {
+                threes[player * -1 == -1 ? 0 : 1] = null;
             }
         }
     }
+}
+
+void GomokuGame::activateThree(int x, int y, int player)
+{
+    int res = 0;
+    Three tmp(-1,-1,-1,-1,-1,-1);
+
+    for (int dirY = -1; dirY <= 1; dirY++) {
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            if (dirY == 0 && dirX == 0) {
+                continue ;
+            }
+
+            if (checkAlignment(x, y, dirX, dirY, 2, player) && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1) && !checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
+                res += 1;
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + dirX;
+                tmp.y2 = y + dirY;
+                tmp.x3 = x + (dirX * 2);
+                tmp.y3 = y + (dirY * 2);
+            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + 2 * dirX, y + 2 * dirY, 0) && checkVal(x + 3 * dirX, y + 3 * dirY, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
+                res += 1;
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + dirX;
+                tmp.y2 = y + dirY;
+                tmp.x3 = x + (dirX * 3);
+                tmp.y3 = y + (dirY * 3);
+            } else if (checkVal(x + dirX, y + dirY, 0) && checkVal(x + 2 * dirX, y + 2 * dirY, player) && checkVal(x + 3 * dirX, y + 3 * dirY, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
+                res += 1;
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + (dirX * 2);
+                tmp.y2 = y + (dirY * 2);
+                tmp.x3 = x + (dirX * 3);
+                tmp.y3 = y + (dirY * 3);
+            }
+        }
+    }
+
+    if (res >= 2 || res == 0) {
+        return ;
+    }
+
+    threes[player == -1 ? 0 : 1] = tmp;
+    threes[player == -1 ? 0 : 1].active = true;
 }
 
 bool GomokuGame::setMove(int x, int y, int player)
@@ -101,12 +111,16 @@ bool GomokuGame::setMove(int x, int y, int player)
         return false;
     }
 
+    if (checkTwoThrees(x, y, player)) {
+        return false;
+    }
+
     matrix[y][x] = player;
 
     checkPairRule(x, y, player);
 
+    deactivateThree(x, y, player);
     activateThree(x, y, player);
-    deactivateThree(x, y, player * -1);
 
     if (checkWin(x, y, player)) {
         winnerChecked(player);
@@ -129,7 +143,7 @@ bool GomokuGame::moveAI(int player)
     all_variants ai_move;
 
     clock_t begin = clock();
-    ai_move = _find_MF(player, 3, 6, matrix);
+    ai_move = _find_MF(player, 5, 3, matrix);
     clock_t end = clock();
 
     if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
@@ -147,8 +161,6 @@ bool GomokuGame::moveAI(int player)
 bool GomokuGame::checkWin(int x, int y, int player)
 {
     if (twoRuleCount[player == -1 ? 0 : 1] >= 5) {
-        std::cout << "Winner - " << player << ", with points -> " << twoRuleCount[player == -1 ? 0 : 1] << std::endl;
-        std::cout << "Player - " << player * -1 << ", with points -> " << twoRuleCount[player * -1 == -1 ? 0 : 1] << std::endl;
         return true;
     }
 
@@ -185,10 +197,8 @@ bool GomokuGame::checkAlignment(int x, int y, int dirX, int dirY, int len, int p
 bool GomokuGame::checkTwoThrees(int x, int y, int player)
 {
     int res = 0;
-    int X_dir = 0;
-    int Y_dir = 0;
-    int x2 = -1;
-    int y2 = -1;
+    Three tmp(-1,-1,-1,-1,-1,-1);
+    Three current = threes[player == -1 ? 0 : 1];
 
     for (int dirY = -1; dirY <= 1; dirY++) {
         for (int dirX = -1; dirX <= 1; dirX++) {
@@ -196,51 +206,61 @@ bool GomokuGame::checkTwoThrees(int x, int y, int player)
                 continue ;
             }
 
-            if (checkAlignment(x, y, dirX, dirY, 2, player) && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1) && !checkVal(x + -1 * dirX, y + -1 * dirY, player * -1)) {
+            if (checkAlignment(x, y, dirX, dirY, 2, player) && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1) && !checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
                 res += 1;
-                X_dir = dirX;
-                Y_dir = dirY;
-                x2 = x + 3 * dirX;
-                y2 = y + 3 * dirY;
-            } else if (checkVal(x + dirX, y + dirY, 0) && checkAlignment(x + dirX, y + dirY, dirX, dirY, 2, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + -1 * dirX, y + -1 * dirY, player * -1)) {
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + dirX;
+                tmp.y2 = y + dirY;
+                tmp.x3 = x + (dirX * 2);
+                tmp.y3 = y + (dirY * 2);
+            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + 2 * dirX, y + 2 * dirY, 0) && checkVal(x + 3 * dirX, y + 3 * dirY, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
                 res += 1;
-                X_dir = dirX;
-                Y_dir = dirY;
-                x2 = x + 4 * dirX;
-                y2 = y + 4 * dirY;
-            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + 2 * dirX, y + 2 * dirY, 0) && checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + dirX;
+                tmp.y2 = y + dirY;
+                tmp.x3 = x + (dirX * 3);
+                tmp.y3 = y + (dirY * 3);
+            } else if (checkVal(x + dirX, y + dirY, 0) && checkVal(x + 2 * dirX, y + 2 * dirY, player) && checkVal(x + 3 * dirX, y + 3 * dirY, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
                 res += 1;
-                X_dir = dirX;
-                Y_dir = dirY;
-                x2 = x + 3 * dirX;
-                y2 = y + 3 * dirY;
+                tmp.x1 = x;
+                tmp.y1 = y;
+                tmp.x2 = x + (dirX * 2);
+                tmp.y2 = y + (dirY * 2);
+                tmp.x3 = x + (dirX * 3);
+                tmp.y3 = y + (dirY * 3);
             }
         }
     }
 
-    if (res == 0) return false;
-    if (res >= 2) return true;
-
-    if (!threes[player == -1 ? 0 : 1].active) {
-        return false;
-    }
-
-    if (threes[player == -1 ? 0 : 1].active &&
-        threes[player == -1 ? 0 : 1].x1 == x &&
-        threes[player == -1 ? 0 : 1].x2 == x2 &&
-        threes[player == -1 ? 0 : 1].y1 == y &&
-        threes[player == -1 ? 0 : 1].y2 == y2)
-    {
-        return false;
-    } else {
+    if (res >= 2) {
         return true;
     }
+    if (res == 0 || !current.active) {
+        return false;
+    }
+
+    for (int dirY = -1; dirY <= 1; dirY++) {
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            if (dirY == 0 && dirX == 0) {
+                continue ;
+            }
+
+            if ((x + dirX == current.x1 && y + dirY == current.y1)
+                    || (x + dirX == current.x2 && y + dirY == current.y2)
+                    || (x + dirX == current.x3 && y + dirY == current.y3)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool GomokuGame::checkRules(int x, int y, int player)
 {
-    return true;
-//    return checkTwoThrees(x, y, player);
+    return !checkTwoThrees(x, y, player);
 }
 
 bool GomokuGame::checkPairRule(int x, int y, int player)
