@@ -103,8 +103,14 @@ bool GomokuGame::setMove(int x, int y, int player)
 
     matrix[y][x] = player;
 
+    checkPairRule(x, y, player);
+
     activateThree(x, y, player);
     deactivateThree(x, y, player * -1);
+
+    if (checkWin(x, y, player)) {
+        winnerChecked(player);
+    }
 
     return true;
 }
@@ -118,9 +124,31 @@ bool GomokuGame::checkVal(int x, int y, int val)
     return (matrix[y][x] == val);
 }
 
+bool GomokuGame::moveAI(int player)
+{
+    all_variants ai_move;
+
+    clock_t begin = clock();
+    ai_move = _find_MF(player, 3, 6, matrix);
+    clock_t end = clock();
+
+    if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
+        return false;
+    }
+
+    matrixChanged(ai_move._x, ai_move._y, ai_move.num);
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+    reactionChanged(elapsed_secs);
+
+    return true;
+}
+
 bool GomokuGame::checkWin(int x, int y, int player)
 {
     if (twoRuleCount[player == -1 ? 0 : 1] >= 5) {
+        std::cout << "Winner - " << player << ", with points -> " << twoRuleCount[player == -1 ? 0 : 1] << std::endl;
+        std::cout << "Player - " << player * -1 << ", with points -> " << twoRuleCount[player * -1 == -1 ? 0 : 1] << std::endl;
         return true;
     }
 
@@ -135,21 +163,6 @@ bool GomokuGame::checkWin(int x, int y, int player)
             }
         }
     }
-
-    all_variants ai_move;
-
-    clock_t begin = clock();
-    ai_move = _find_MF(player * -1, 5, 3, matrix);
-    clock_t end = clock();
-
-    if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
-        return false;
-    }
-    matrixChanged(ai_move._x, ai_move._y, ai_move.num);
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-
-    reactionChanged(elapsed_secs);
-    checkPairRule(ai_move._x, ai_move._y, ai_move.num);
 
     return false;
 }

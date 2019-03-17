@@ -70,6 +70,7 @@ public:
     Q_INVOKABLE bool checkPairRule(int x, int y, int player);
     Q_INVOKABLE bool checkWin(int x, int y, int player);
     Q_INVOKABLE bool checkTwoThrees(int x, int y, int player);
+    Q_INVOKABLE bool moveAI(int player);
 
     bool checkVal(int x, int y, int val);
     bool checkAlignment(int x, int y, int dirX, int dirY, int len, int player);
@@ -85,6 +86,7 @@ public:
 signals:
     void matrixChanged(int x, int y, int val);
     void reactionChanged(double time);
+    void winnerChecked(int player);
 
 private:
     std::vector<std::vector<int>>   matrix;

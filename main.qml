@@ -8,6 +8,8 @@ Window {
     height: 600
     title: qsTr("Gomoku")
 
+    property int intervalID: -1
+    property int customPlayer: 1
     property int movePlayer: 1
     property var stack: []
     property bool isEnd: false
@@ -28,11 +30,9 @@ Window {
                 var newY = y * 30 + 5 - Math.floor(y * 0.15)
 
                 if (val == 0) {
-                    console.log("Pair delete: x -> ", newX, ", y -> ", newY);
 
                     for (var i = 0; i < stack.length; i++) {
                         if (Math.abs(stack[i].x - newX) < 10 && Math.abs(stack[i].y - newY) < 10) {
-                            console.log(stack[i].x, stack[i].y);
                             stack[i].visible = false;
                             stack[i].destroy();
                             stack.splice(i, 1);
@@ -52,6 +52,12 @@ Window {
 
             onReactionChanged: {
                 moveTimestamp.text = qsTr("AI reaction time: " + time);
+            }
+
+            onWinnerChecked: {
+                popupWin.contentItem.text = "Congratulations! Win player - " + (player === 1 ? "white" : "black");
+                popupWin.open();
+                isEnd = true;
             }
         }
 
@@ -80,21 +86,15 @@ Window {
                     return ;
                 }
 
-                if (game.checkPairRule(iX, iY, movePlayer)) {
-                    console.log("Pair rule works!");
-                }
-
-                if (game.checkWin(iX, iY, movePlayer)) {
-                    popupWin.contentItem.text += movePlayer === 1 ? "white" : "black";
-                    popupWin.open();
-                    isEnd = true;
-                }
-
                 var lastElement = Qt.createQmlObject('import QtQuick 2.9; Image {width: 20; height: 20; x: ' + newX + '; y: ' + newY + '; source: ' + sourceImg, board);
                 stack.push(lastElement);
 
                 movePlayer = movePlayer * -1;
                 playerText.text = movePlayer === 1 ? qsTr("white") : qsTr("black");
+
+                if (!game.moveAI(movePlayer)) {
+                    return ;
+                }
             }
         }
     }
@@ -142,5 +142,80 @@ Window {
         height: 22
         text: qsTr("AI reaction time: ")
         font.pixelSize: 18
+    }
+
+    Button {
+        id: aiVsAi
+        x: 606
+        y: 73
+        width: 192
+        height: 40
+        text: qsTr("AI vs AI mode")
+        font.pointSize: 22
+
+        Timer {
+            id: timer
+            interval: timeSlider.value * 1000
+            running: false
+            repeat: true
+            onTriggered: {
+                if (!game.moveAI(movePlayer)) {
+                    return ;
+                }
+
+                if (isEnd) running = false;
+            }
+        }
+
+        onClicked: timer.running = true
+    }
+
+    Button {
+        id: reverse
+        x: 606
+        y: 206
+        width: 192
+        height: 47
+        text: qsTr("Reverse game")
+        font.pointSize: 22
+    }
+
+    Button {
+        id: moveAIone
+        x: 606
+        y: 279
+        width: 192
+        height: 43
+        text: qsTr("Move by AI")
+        font.pointSize: 22
+        onClicked: {
+            if (!game.moveAI(movePlayer)) {
+                return ;
+            }
+
+            if (!game.moveAI(movePlayer)) {
+                return ;
+            }
+        }
+    }
+
+    Slider {
+        id: timeSlider
+        x: 606
+        y: 154
+        width: 192
+        height: 40
+        value: 1.5
+        stepSize: 0.25
+        from: 0.0
+        to: 3.0
+    }
+
+    Text {
+        id: element
+        x: 606
+        y: 130
+        text: qsTr("Sleep time for AI (now " + timeSlider.value + " sec)")
+        font.pixelSize: 15
     }
 }
