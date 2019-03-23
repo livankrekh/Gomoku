@@ -71,9 +71,12 @@ public:
     Q_INVOKABLE bool checkTwoThrees(int x, int y, int player);
     Q_INVOKABLE bool moveAI(int player);
 
+    int countAlignment(int x, int y, int val, int dirX, int dirY);
+
     bool checkVal(int x, int y, int val);
     bool checkAlignment(int x, int y, int dirX, int dirY, int len, int player);
     bool checkRules(int x, int y, int player);
+    bool checkAlertRule(int x, int y, int val, int dirX, int dirY);
     void activateThree(int x, int y, int player);
     void deactivateThree(int x, int y, int player);
 

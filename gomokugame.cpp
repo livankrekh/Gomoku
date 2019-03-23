@@ -112,10 +112,13 @@ bool GomokuGame::setMove(int x, int y, int player)
     }
 
     if (checkTwoThrees(x, y, player)) {
+        std::cout << "CHECK TWO THREES FALSE by " << player << std::endl;
         return false;
     }
 
     matrix[y][x] = player;
+
+    matrixChanged(x, y, player);
 
     checkPairRule(x, y, player);
 
@@ -150,12 +153,92 @@ bool GomokuGame::moveAI(int player)
         return false;
     }
 
-    matrixChanged(ai_move._x, ai_move._y, ai_move.num);
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
     reactionChanged(elapsed_secs);
 
     return true;
+}
+
+int GomokuGame::countAlignment(int x, int y, int val, int dirX, int dirY)
+{
+    int res = 0;
+    int i = 1;
+
+    while (x + i * dirX < GOBAN_SIZE
+           && y + i * dirY < GOBAN_SIZE
+           && x + i * dirX >= 0
+           && y + i * dirY >= 0
+           && matrix[y + i * dirY][x + i * dirX] == val) {
+        res++;
+        i++;
+    }
+    i = 1;
+    dirX *= -1;
+    dirY *= -1;
+    while (x + i * dirX < GOBAN_SIZE
+           && y + i * dirY < GOBAN_SIZE
+           && x + i * dirX >= 0
+           && y + i * dirY >= 0
+           && matrix[y + i * dirY][x + i * dirX] == val) {
+        res++;
+        i++;
+    }
+
+    return res;
+}
+
+bool GomokuGame::checkAlertRule(int x, int y, int val, int dirX, int dirY)
+{
+    int i = 0;
+
+    while (x + i * dirX < GOBAN_SIZE
+           && y + i * dirY < GOBAN_SIZE
+           && x + i * dirX >= 0
+           && y + i * dirY >= 0
+           && matrix[y + i * dirY][x + i * dirX] == val) {
+        for (int dirYN = -1; dirYN <= 1; dirYN++) {
+            for (int dirXN = -1; dirXN <= 1; dirXN++) {
+                if ((dirYN == 0 && dirXN == 0)
+                        || (dirXN == dirX && dirYN == dirY)
+                        || (dirXN == dirX * -1 && dirYN == dirY * -1)) {
+                    continue;
+                }
+
+                if ((checkVal(x + dirXN, y + dirYN, val) || checkVal(x + dirXN * -1, y + dirYN * -1, val))
+                        && (checkVal(x + dirXN * 2, y + dirYN * 2, val) || checkVal(x + dirXN * -2, y + dirYN * -2, val)) ) {
+                    return true;
+                }
+            }
+        }
+        i++;
+    }
+    i = 1;
+    dirX *= -1;
+    dirY *= -1;
+    while (x + i * dirX < GOBAN_SIZE
+           && y + i * dirY < GOBAN_SIZE
+           && x + i * dirX >= 0
+           && y + i * dirY >= 0
+           && matrix[y + i * dirY][x + i * dirX] == val) {
+        for (int dirYN = -1; dirYN <= 1; dirYN++) {
+            for (int dirXN = -1; dirXN <= 1; dirXN++) {
+                if ((dirYN == 0 && dirXN == 0)
+                        || (dirXN == dirX && dirYN == dirY)
+                        || (dirXN == dirX * -1 && dirYN == dirY * -1)) {
+                    continue;
+                }
+
+                if ((checkVal(x + dirXN, y + dirYN, val) || checkVal(x + dirXN * -1, y + dirYN * -1, val))
+                        && (checkVal(x + dirXN * 2, y + dirYN * 2, val) || checkVal(x + dirXN * -2, y + dirYN * -2, val)) ) {
+                    return true;
+                }
+            }
+        }
+        i++;
+    }
+
+    return false;
 }
 
 bool GomokuGame::checkWin(int x, int y, int player)
@@ -171,7 +254,9 @@ bool GomokuGame::checkWin(int x, int y, int player)
             }
 
             if (checkAlignment(x, y, dirX, dirY, 4, player)) {
-                return true;
+                return !checkAlertRule(x, y, player, dirX, dirY);
+            } else if (countAlignment(x, y, player, dirX, dirY) >= 5) {
+                return !checkAlertRule(x, y, player, dirX, dirY);
             }
         }
     }
@@ -445,7 +530,7 @@ void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int STA
     most_best_variant(parent);
 
     for (int i = 0; i < parent->variants.size(); ++i){
-        if (width > 0 and this->checkRules(parent->variants[i]._x, parent->variants[i]._y, parent->now_player)){
+        if (width > 0 and this->checkRules(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
             child_tmp = create_node(parent, parent->variants[i]._x, parent->variants[i]._y);
             width--;
         }

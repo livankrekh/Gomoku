@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
+import QtMultimedia 5.8
 
 Window {
     visible: true
@@ -8,11 +9,12 @@ Window {
     height: 600
     title: qsTr("Gomoku")
 
-    property int intervalID: -1
     property int customPlayer: 1
     property int movePlayer: 1
+    property int moveCount: 1
     property var stack: []
     property bool isEnd: false
+    property bool humanMode: false
 
     Image {
         id: board
@@ -43,6 +45,10 @@ Window {
                     var sourceImg = val == 1 ? '"imgs/white.png"}' : '"imgs/black.png"}';
                     var lastElement = Qt.createQmlObject('import QtQuick 2.9; Image {width: 20; height: 20; x: ' + newX + '; y: ' + newY + '; source: ' + sourceImg, board);
                     stack.push(lastElement);
+
+                    if (val == -1) {
+                        moveCount++;
+                    }
 
                     movePlayer = movePlayer * -1;
                     playerText.text = movePlayer == 1 ? qsTr("white") : qsTr("black");
@@ -85,11 +91,12 @@ Window {
                 var lastElement = Qt.createQmlObject('import QtQuick 2.9; Image {width: 20; height: 20; x: ' + newX + '; y: ' + newY + '; source: ' + sourceImg, board);
                 stack.push(lastElement);
 
-                movePlayer = movePlayer * -1;
                 playerText.text = movePlayer === 1 ? qsTr("white") : qsTr("black");
 
-                if (!game.moveAI(movePlayer)) {
-                    return ;
+                if (!humanMode) {
+                    if (!game.moveAI(movePlayer)) {
+                        return ;
+                    }
                 }
             }
         }
@@ -143,11 +150,16 @@ Window {
     Button {
         id: aiVsAi
         x: 606
-        y: 73
+        y: 204
         width: 192
         height: 40
         text: qsTr("AI vs AI mode")
         font.pointSize: 22
+
+        SoundEffect {
+            id: playSound
+            source: "imgs/AIvoice.wav"
+        }
 
         Timer {
             id: timer
@@ -155,7 +167,9 @@ Window {
             running: false
             repeat: true
             onTriggered: {
-                if (!game.moveAI(movePlayer)) {
+                if (stack.length === 0) {
+                    game.setMove(9,9,movePlayer);
+                } else if (!game.moveAI(movePlayer)) {
                     return ;
                 }
 
@@ -163,20 +177,26 @@ Window {
             }
         }
 
-        onClicked: timer.running = true
+        onClicked: {
+            playSound.play();
+            timer.running = true;
+        }
     }
 
     Button {
         id: reverse
         x: 606
-        y: 206
+        y: 314
         width: 192
         height: 47
         text: qsTr("Reverse game")
         font.pointSize: 22
 
         onClicked: {
-            if (!game.moveAI(movePlayer)) {
+            customPlayer *= -1;
+            if (stack.length === 0) {
+                game.setMove(9,9,movePlayer);
+            } else if (!game.moveAI(movePlayer)) {
                 return ;
             }
         }
@@ -185,13 +205,19 @@ Window {
     Button {
         id: moveAIone
         x: 606
-        y: 279
+        y: 372
         width: 192
         height: 43
-        text: qsTr("Move by AI")
+        text: qsTr("Help by AI")
         font.pointSize: 22
         onClicked: {
-            if (!game.moveAI(movePlayer)) {
+            if (timer.running === true) {
+                return ;
+            }
+
+            if (stack.length === 0) {
+                game.setMove(9,9,movePlayer);
+            } else if (!game.moveAI(movePlayer)) {
                 return ;
             }
 
@@ -204,7 +230,7 @@ Window {
     Slider {
         id: timeSlider
         x: 606
-        y: 154
+        y: 268
         width: 192
         height: 40
         value: 1.5
@@ -216,8 +242,52 @@ Window {
     Text {
         id: element
         x: 606
-        y: 130
+        y: 250
         text: qsTr("Sleep time for AI (now " + timeSlider.value + " sec)")
         font.pixelSize: 15
+    }
+
+    Button {
+        id: humanVsHuman
+        x: 606
+        y: 98
+        width: 192
+        height: 40
+        text: qsTr("Human vs Human mode")
+        font.pointSize: 15
+        onClicked: {
+            timer.running = false;
+            humanMode = true;
+        }
+    }
+
+    Button {
+        id: humanVsAi
+        x: 606
+        y: 152
+        width: 192
+        height: 40
+        text: qsTr("Human vs AI mode")
+        font.pointSize: 19
+        onClicked: {
+            timer.running = false;
+            humanMode = false;
+
+            if (movePlayer != customPlayer) {
+                if (!game.moveAI(movePlayer)) {
+                    return ;
+                }
+            }
+        }
+    }
+
+    Text {
+        id: moveNumber
+        x: 606
+        y: 58
+        width: 49
+        height: 21
+        text: qsTr("Move #" + moveCount)
+        font.pixelSize: 21
     }
 }
