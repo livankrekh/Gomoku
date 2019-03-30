@@ -14,7 +14,7 @@
 #define GOBAN_SIZE 19
 
 struct all_variants {
-    int num, _x, _y;
+    size_t num, _x, _y;
 };
 
 struct numS {
@@ -65,25 +65,30 @@ public:
     explicit GomokuGame();
     ~GomokuGame();
 
+    Q_PROPERTY(bool alphaBetaProoning READ getProoning WRITE setProoning)
+
     Q_INVOKABLE bool setMove(int x, int y, int player);
     Q_INVOKABLE bool checkPairRule(int x, int y, int player);
-    Q_INVOKABLE bool checkWin(int x, int y, int player);
+    Q_INVOKABLE int checkWin(int x, int y, int player);
     Q_INVOKABLE bool checkTwoThrees(int x, int y, int player);
     Q_INVOKABLE bool moveAI(int player);
+
+    bool getProoning();
+    void setProoning(const bool val);
 
     int countAlignment(int x, int y, int val, int dirX, int dirY);
 
     bool checkVal(int x, int y, int val);
     bool checkAlignment(int x, int y, int dirX, int dirY, int len, int player);
     bool checkRules(int x, int y, int player);
-    bool checkAlertRule(int x, int y, int val, int dirX, int dirY);
+    int checkAlertRule(int x, int y, int val, int dirX, int dirY);
     void activateThree(int x, int y, int player);
     void deactivateThree(int x, int y, int player);
 
     // AI part
 
-    void make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int START_PLAYER);
-    all_variants _find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH, std::vector<std::vector<int>> MAP);
+    int minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYER, int alpha, int beta, bool maximizingPlayer, bool USE_OPTIMIZATION);
+    all_variants _find_where_go(int AI_PLAYER, int MAX_DEPTH, int MAX_WIDTH, std::vector<std::vector<int> > map, bool USE_OPTIMIZATION);
 
 signals:
     void matrixChanged(int x, int y, int val);
@@ -95,6 +100,7 @@ private:
     std::vector<Three>              threes;
     int                             current_player;
     int                             twoRuleCount[2];
+    bool                            prooning;
 };
 
 #endif // GOMOKUGAME_H

@@ -22,10 +22,21 @@ GomokuGame::GomokuGame() : QObject()
     threes.push_back( Three(-1,-1,-1,-1,-1,-1) );
     twoRuleCount[0] = 0;
     twoRuleCount[1] = 0;
+    prooning = true;
 }
 
 GomokuGame::~GomokuGame()
 {
+}
+
+bool GomokuGame::getProoning()
+{
+    return prooning;
+}
+
+void GomokuGame::setProoning(const bool val)
+{
+    prooning = val;
 }
 
 void GomokuGame::deactivateThree(int x, int y, int player)
@@ -34,20 +45,30 @@ void GomokuGame::deactivateThree(int x, int y, int player)
     Three current = threes[player == -1 ? 0 : 1];
     Three other = threes[player * -1 == -1 ? 0 : 1];
 
+    int currDirX1 = current.x2 - current.x1 == 0 ? 0 : (current.x2 - current.x1 / std::abs(current.x2 - current.x1));
+    int currDirY1 = current.y2 - current.y1 == 0 ? 0 : (current.y2 - current.y1 / std::abs(current.y2 - current.y1));
+    int currDirX3 = current.x3 - current.x2 == 0 ? 0 : (current.x3 - current.x2 / std::abs(current.x3 - current.x2));
+    int currDirY3 = current.y3 - current.y2 == 0 ? 0 : (current.y3 - current.y2 / std::abs(current.y3 - current.y2));
+
+    int otherDirX1 = other.x2 - other.x1 == 0 ? 0 : (other.x2 - other.x1 / std::abs(other.x2 - other.x1));
+    int otherDirY1 = other.y2 - other.y1 == 0 ? 0 : (other.y2 - other.y1 / std::abs(other.y2 - other.y1));
+    int otherDirX3 = other.x3 - other.x2 == 0 ? 0 : (other.x3 - other.x2 / std::abs(other.x3 - other.x2));
+    int otherDirY3 = other.y3 - other.y2 == 0 ? 0 : (other.y3 - other.y2 / std::abs(other.y3 - other.y2));
+
     for (int dirY = -1; dirY <= 1; dirY++) {
         for (int dirX = -1; dirX <= 1; dirX++) {
             if (dirY == 0 && dirX == 0) {
                 continue ;
             }
 
-            if (x + dirX == current.x1 && y + dirY == current.y1 && current.x2 - current.x1 == dirX && current.y2 - current.y1 == dirY) {
+            if (x + dirX == current.x1 && y + dirY == current.y1 && currDirX1 == dirX && currDirY1 == dirY) {
                 threes[player == -1 ? 0 : 1] = null;
-            } else if (x + dirX == current.x3 && y + dirY == current.y3 && current.x3 - current.x2 == dirX && current.y3 - current.y2 == dirY) {
+            } else if (x + dirX == current.x3 && y + dirY == current.y3 && currDirX3 == dirX && currDirY3 == dirY) {
                 threes[player == -1 ? 0 : 1] = null;
             }
-            if (x + dirX == other.x1 && y + dirY == other.y1 && other.x2 - other.x1 == dirX && other.y2 - other.y1 == dirY) {
+            if (x + dirX == other.x1 && y + dirY == other.y1 && otherDirX1 == dirX && otherDirY1 == dirY) {
                 threes[player * -1 == -1 ? 0 : 1] = null;
-            } else if (x + dirX == other.x3 && y + dirY == other.y3 && other.x3 - other.x2 == dirX && other.y3 - other.y2 == dirY) {
+            } else if (x + dirX == other.x3 && y + dirY == other.y3 && otherDirX3 == dirX && otherDirY3 == dirY) {
                 threes[player * -1 == -1 ? 0 : 1] = null;
             }
         }
@@ -65,7 +86,13 @@ void GomokuGame::activateThree(int x, int y, int player)
                 continue ;
             }
 
-            if (checkAlignment(x, y, dirX, dirY, 2, player) && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1) && !checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
+            if (countAlignment(x, y, player, dirX, dirY) >= 4) {
+                continue ;
+            }
+
+            if (checkAlignment(x, y, dirX, dirY, 2, player)
+                    && !checkVal(x + 3 * dirX, y + 3 * dirY, player * -1)
+                    && !checkVal(x + 3 * dirX, y + 3 * dirY, player)) {
                 res += 1;
                 tmp.x1 = x;
                 tmp.y1 = y;
@@ -73,7 +100,11 @@ void GomokuGame::activateThree(int x, int y, int player)
                 tmp.y2 = y + dirY;
                 tmp.x3 = x + (dirX * 2);
                 tmp.y3 = y + (dirY * 2);
-            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + 2 * dirX, y + 2 * dirY, 0) && checkVal(x + 3 * dirX, y + 3 * dirY, player) && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1) && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
+            } else if (checkVal(x + dirX, y + dirY, player)
+                       && checkVal(x + 2 * dirX, y + 2 * dirY, 0)
+                       && checkVal(x + 3 * dirX, y + 3 * dirY, player)
+                       && !checkVal(x + 4 * dirX, y + 4 * dirY, player * -1)
+                       && !checkVal(x + 4 * dirX, y + 4 * dirY, player)) {
                 res += 1;
                 tmp.x1 = x;
                 tmp.y1 = y;
@@ -89,6 +120,14 @@ void GomokuGame::activateThree(int x, int y, int player)
                 tmp.y2 = y + (dirY * 2);
                 tmp.x3 = x + (dirX * 3);
                 tmp.y3 = y + (dirY * 3);
+            } else if (checkVal(x + dirX, y + dirY, player) && checkVal(x + dirX * -1, y + dirY * -1, player) && !checkVal(x + dirX * 2, y + dirY, player) && !checkVal(x + dirX * -2, y + dirY * -2, player * -1)) {
+                res += 1;
+                tmp.x1 = x + dirX;
+                tmp.y1 = y + dirY;
+                tmp.x2 = x;
+                tmp.y2 = y;
+                tmp.x3 = x + dirX * -1;
+                tmp.y3 = y + dirY * -1;
             }
         }
     }
@@ -112,7 +151,6 @@ bool GomokuGame::setMove(int x, int y, int player)
     }
 
     if (checkTwoThrees(x, y, player)) {
-        std::cout << "CHECK TWO THREES FALSE by " << player << std::endl;
         return false;
     }
 
@@ -125,7 +163,7 @@ bool GomokuGame::setMove(int x, int y, int player)
     deactivateThree(x, y, player);
     activateThree(x, y, player);
 
-    if (checkWin(x, y, player)) {
+    if (checkWin(x, y, player) == 2) {
         winnerChecked(player);
     }
 
@@ -146,10 +184,10 @@ bool GomokuGame::moveAI(int player)
     all_variants ai_move;
 
     clock_t begin = clock();
-    ai_move = _find_MF(player, 5, 3, matrix);
+    ai_move = _find_where_go(player, 5, 3, matrix, prooning);
     clock_t end = clock();
 
-    if (!setMove(ai_move._x, ai_move._y, ai_move.num)) {
+    if (!setMove(ai_move._x, ai_move._y, player)) {
         return false;
     }
 
@@ -188,7 +226,7 @@ int GomokuGame::countAlignment(int x, int y, int val, int dirX, int dirY)
     return res;
 }
 
-bool GomokuGame::checkAlertRule(int x, int y, int val, int dirX, int dirY)
+int GomokuGame::checkAlertRule(int x, int y, int player, int dirX, int dirY)
 {
     int i = 0;
 
@@ -196,7 +234,7 @@ bool GomokuGame::checkAlertRule(int x, int y, int val, int dirX, int dirY)
            && y + i * dirY < GOBAN_SIZE
            && x + i * dirX >= 0
            && y + i * dirY >= 0
-           && matrix[y + i * dirY][x + i * dirX] == val) {
+           && matrix[y + i * dirY][x + i * dirX] == player) {
         for (int dirYN = -1; dirYN <= 1; dirYN++) {
             for (int dirXN = -1; dirXN <= 1; dirXN++) {
                 if ((dirYN == 0 && dirXN == 0)
@@ -205,46 +243,26 @@ bool GomokuGame::checkAlertRule(int x, int y, int val, int dirX, int dirY)
                     continue;
                 }
 
-                if ((checkVal(x + dirXN, y + dirYN, val) || checkVal(x + dirXN * -1, y + dirYN * -1, val))
-                        && (checkVal(x + dirXN * 2, y + dirYN * 2, val) || checkVal(x + dirXN * -2, y + dirYN * -2, val)) ) {
-                    return true;
-                }
-            }
-        }
-        i++;
-    }
-    i = 1;
-    dirX *= -1;
-    dirY *= -1;
-    while (x + i * dirX < GOBAN_SIZE
-           && y + i * dirY < GOBAN_SIZE
-           && x + i * dirX >= 0
-           && y + i * dirY >= 0
-           && matrix[y + i * dirY][x + i * dirX] == val) {
-        for (int dirYN = -1; dirYN <= 1; dirYN++) {
-            for (int dirXN = -1; dirXN <= 1; dirXN++) {
-                if ((dirYN == 0 && dirXN == 0)
-                        || (dirXN == dirX && dirYN == dirY)
-                        || (dirXN == dirX * -1 && dirYN == dirY * -1)) {
-                    continue;
-                }
+                int currX = x + i * dirX;
+                int currY = y + i * dirY;
 
-                if ((checkVal(x + dirXN, y + dirYN, val) || checkVal(x + dirXN * -1, y + dirYN * -1, val))
-                        && (checkVal(x + dirXN * 2, y + dirYN * 2, val) || checkVal(x + dirXN * -2, y + dirYN * -2, val)) ) {
-                    return true;
+                if (checkVal(currX + dirXN, currY + dirYN, player)
+                        && (checkVal(currX + dirXN * 2, currY + dirYN * 3, player * -1) || checkVal(currX + dirXN * 2, currY + dirYN * 3, 0))
+                        && (checkVal(currX + dirXN * 2, currY + dirYN * 2, player * -1) || checkVal(currX + dirXN * -1, currY + dirYN * -1, player * -1))) {
+                    return i;
                 }
             }
         }
         i++;
     }
 
-    return false;
+    return i;
 }
 
-bool GomokuGame::checkWin(int x, int y, int player)
+int GomokuGame::checkWin(int x, int y, int player)
 {
     if (twoRuleCount[player == -1 ? 0 : 1] >= 5) {
-        return true;
+        return 2;
     }
 
     for (int dirY = -1; dirY <= 1; dirY++) {
@@ -253,15 +271,17 @@ bool GomokuGame::checkWin(int x, int y, int player)
                 continue ;
             }
 
-            if (checkAlignment(x, y, dirX, dirY, 4, player)) {
-                return !checkAlertRule(x, y, player, dirX, dirY);
-            } else if (countAlignment(x, y, player, dirX, dirY) >= 5) {
-                return !checkAlertRule(x, y, player, dirX, dirY);
+            if (checkAlignment(x, y, dirX, dirY, 4, player) || countAlignment(x, y, player, dirX, dirY) >= 4) {
+                if (checkAlertRule(x, y, player, dirX, dirY) + checkAlertRule(x, y, player, dirX * -1, dirY * -1) >= 6) {
+                    return 2;
+                } else {
+                    return 1;
+                }
             }
         }
     }
 
-    return false;
+    return 0;
 }
 
 bool GomokuGame::checkAlignment(int x, int y, int dirX, int dirY, int len, int player)
@@ -288,6 +308,10 @@ bool GomokuGame::checkTwoThrees(int x, int y, int player)
     for (int dirY = -1; dirY <= 1; dirY++) {
         for (int dirX = -1; dirX <= 1; dirX++) {
             if (dirY == 0 && dirX == 0) {
+                continue ;
+            }
+
+            if (countAlignment(x, y, player, dirX, dirY) >= 4) {
                 continue ;
             }
 
@@ -387,6 +411,8 @@ bool GomokuGame::checkPairRule(int x, int y, int player)
 
 using namespace std;
 
+size_t NUM_NODE;
+
 bool compare_variants(all_variants i1, all_variants i2)
 {
     return (i1.num > i2.num);
@@ -401,8 +427,7 @@ void					diagonal_left_up(node *nde, bool you);
 void					diagonal_right_up(node *nde, bool you);
 void					row(node *nde, bool you);
 void					column(node *nde, bool you);
-void 					checkH(vector<int>  tmp, int now_player, vector<int> &how_many_nums);
-void					iterate_all_variants(node *nde, vector<int> &how_many_nums);
+void					make_cross_map(node *parent);
 
 void	most_best_variant(node *nde){
     int tmp_map, tmp_map_not_you, for_tmp;
@@ -411,11 +436,12 @@ void	most_best_variant(node *nde){
         for (int y = 0; y < nde->size; ++y){
             tmp_map_not_you = nde->cross_map_not_you[x][y];
             tmp_map = nde->cross_map[x][y];
+            // printf("x:%d y:%d %d %d\n",x, y,tmp_map, tmp_map_not_you );
             if (tmp_map != 0){
                 for_tmp = 1;
                 while(tmp_map-- > 1)
                     for_tmp *= 10;
-                tmp_map = for_tmp;
+                tmp_map = for_tmp + 1;
             }
             if (tmp_map_not_you != 0){
                 for_tmp = 1;
@@ -433,6 +459,10 @@ void	most_best_variant(node *nde){
         }
 
     sort(nde->variants.begin(), nde->variants.end(), compare_variants);
+}
+
+bool	checkRules(int x, int y, int player){
+    return true;
 }
 
 node *	create_node(node *parent, int x, int y){
@@ -498,27 +528,74 @@ node *	create_node(node *parent, int x, int y){
     return child;
 }
 
+int			return_heuristic(node *child, int AI_PLAYER){
 
-void			return_heuristic(node *child, int START_PLAYER){
-
-    size_t 	sum = 0;
-    vector<int> how_many_nums(5);
-    iterate_all_variants(child, how_many_nums);
-
-    sum = how_many_nums[0] + how_many_nums[1] * 30 +
-    how_many_nums[2]*300 + how_many_nums[3]*10000 +
-    how_many_nums[4]*10000000;
-    if (how_many_nums[4] != 0)
-        child->win = true;
-    child->heuristics = sum;
-}
-void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int START_PLAYER){
-    if (parent->level_depth == MAX_DEPTH){
-        return_heuristic(parent, START_PLAYER);
-        return;
+    int 	sum = 0;
+    int 	tmp_ai = 0;
+    int 	tmp_rival = 0;
+    vector<int> AI_player(5);
+    vector<int> rival_player(5);
+    for (int i = 0; i < 5; ++i)
+    {
+        AI_player[i] = 0;
+        rival_player[i] = 0;
     }
-    node *child_tmp;
-    int width = MAX_WIDTH;
+    for (int i = 0; i < child->cross_map.size(); ++i){
+        for (int j = 0; j < child->cross_map.size(); ++j){
+            if (child->now_player == AI_PLAYER){
+                tmp_ai = child->cross_map[i][j];
+                tmp_rival = child->cross_map_not_you[i][j];
+            }
+            else{
+                tmp_ai = child->cross_map_not_you[i][j];
+                tmp_rival = child->cross_map[i][j];
+            }
+            if (tmp_ai > 0){
+                if (tmp_ai > 5)
+                    AI_player[4] += 1;
+                else
+                    AI_player[tmp_ai - 1] += 1;
+
+            }
+            if (tmp_rival > 0){
+                if (tmp_rival > 5)
+                    rival_player[4] += 1;
+                else
+                    rival_player[tmp_rival - 1] += 1;
+            }
+        }
+    }
+    for (int i = 0; i < 5; ++i)
+        AI_player[i] = AI_player[i] - rival_player[i];
+    sum = AI_player[0] +
+    AI_player[1] * 15 +
+    AI_player[2] * 300 +
+    AI_player[3] * 6000 +
+    AI_player[4] * 1000000;
+    if (child->now_player == AI_PLAYER){
+        if (AI_player[4] > 0)
+            child->win = true;
+    }
+    else{
+        if (AI_player[4] < 0)
+            child->win = true;
+    }
+    child->heuristics = sum;
+    // printf("heuristics:%d\n", sum);
+    return sum;
+}
+
+int this_win_finally(int x,int y, int AI_PLAYER, int *_x_cap , int *_y_cap){
+
+    return 0;
+    // if (x == 4 and y == 2 and AI_PLAYER == 1){
+    // 	(*_x_cap) = 4;
+    // 	(*_y_cap) = 1;
+    // 	return 2;
+    // }
+    // return 0;
+}
+void	make_cross_map(node *parent){
     row(parent, false);// if we have 2 free flangs its 2 point if 1 free flang - 1 point ?
     row(parent, true);
     column(parent, false);
@@ -527,66 +604,133 @@ void	GomokuGame::make_childs(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int STA
     diagonal_right_up(parent, true);
     diagonal_left_up(parent, false);
     diagonal_left_up(parent, true);
-    most_best_variant(parent);
+}
 
-    for (int i = 0; i < parent->variants.size(); ++i){
-        if (width > 0 and this->checkRules(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
-            child_tmp = create_node(parent, parent->variants[i]._x, parent->variants[i]._y);
-            width--;
-        }
-    }
-
-    for (int i = 0; i < parent->nodes.size(); ++i){
-        make_childs(parent->nodes[i], MAX_DEPTH, MAX_WIDTH, START_PLAYER);
-    }
-
-    bool maximaze = true;
-    int limit_tmp, tmpx, tmpy;
-    int limit = parent->nodes[0]->heuristics;
+int 	choose_best_child(node *parent, bool maximizingPlayer)
+{
+    int tmp_heur, tmpx, tmpy;
+    int heur = parent->nodes[0]->heuristics;
     int x = parent->nodes[0]->x;
     int y = parent->nodes[0]->y;
 
 
-    if (parent->now_player == START_PLAYER)
-        maximaze = false;
     for (int i = 0; i < parent->nodes.size(); ++i){
-        // check have we heuristics
-        limit_tmp = parent->nodes[i]->heuristics;
+        tmp_heur = parent->nodes[i]->heuristics;
         tmpx = parent->nodes[i]->x;
         tmpy = parent->nodes[i]->y;
-        if (maximaze){
-            if (limit_tmp > limit){
-                limit = limit_tmp;
+        if (maximizingPlayer){
+            if (tmp_heur > heur){
+                heur = tmp_heur;
                 x = tmpx;
                 y = tmpy;
             }
         }
         else{
-            if (limit_tmp < limit){
-                limit = limit_tmp;
+            if (tmp_heur < heur){
+                heur = tmp_heur;
                 x = tmpx;
                 y = tmpy;
             }
         }
     }
-    parent->heuristics = limit;
+    // printf("heur %d %d %d\n", heur, x, y);
+    parent->heuristics = heur;
     if (parent->level_depth == 0){
         parent->x = x;
         parent->y = y;
     }
+    return heur;
 }
 
-all_variants	GomokuGame::_find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH, std::vector<std::vector<int>> MAP){
-    int OTHER_PLAYER = -1*START_PLAYER;
-    node *first_node = new node;
+int GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYER, int alpha, int beta, bool maximizingPlayer, bool USE_OPTIMIZATION)
+{
+    node	*child_tmp;
+    int		width = MAX_WIDTH;
+    int		child_num = 0;
+    int		value = 2147483000;
+    int		result;
+    if (maximizingPlayer)
+        value = -2147483000;
 
+    make_cross_map(parent);
+
+    NUM_NODE += 1;
+    if (parent->level_depth == MAX_DEPTH)
+        return return_heuristic(parent, AI_PLAYER);
+
+    most_best_variant(parent);
+    for (int i = 0; i < parent->variants.size(); ++i){
+        if (width > 0 and checkRules(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
+            int		_x_cap = -1;
+            int		_y_cap = -1;
+//            int		res = this_win_finally(parent->variants[i]._x, parent->variants[i]._y, parent->now_player, &_x_cap, &_y_cap);
+
+            if (checkWin(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
+                if (maximizingPlayer)
+                    parent->heuristics = 200000000;
+                else
+                    parent->heuristics = -200000000;
+                parent->x = parent->variants[i]._x;
+                parent->y = parent->variants[i]._y;
+                return parent->heuristics;
+            }
+            else {
+                child_tmp = create_node(parent, parent->variants[i]._x, parent->variants[i]._y);
+                width--;
+                /*if (res == 2){
+                    all_variants  tmpvar;
+                    tmpvar.num = 10000000000;
+                    tmpvar._x = _x_cap;
+                    tmpvar._y = _y_cap;
+                    child_tmp->variants.push_back(tmpvar);
+                    printf("next must be   x:%d y:%x\n", _x_cap, _y_cap);
+                }*/
+                result = minimax(parent->nodes[child_num], MAX_DEPTH, MAX_WIDTH, AI_PLAYER, alpha, beta, !maximizingPlayer, USE_OPTIMIZATION);
+                child_num += 1;
+
+                if (maximizingPlayer){
+                    value = max(value, result);
+                    alpha = max(alpha, value);
+                }
+                else{
+                    value = min(value, result);
+                    beta = min(beta, value);
+                }
+                if (USE_OPTIMIZATION)
+                    if (alpha >= beta)
+                        break;
+            }
+        }
+    }
+
+    if (parent->nodes.size() <= 0)
+        return parent->heuristics;
+    return choose_best_child(parent, maximizingPlayer);
+}
+
+void	free_nodes(node *parent)
+{
+    if (parent->nodes.size() <= 0)
+        return;
+    for (int i = 0; i < parent->nodes.size(); ++i){
+        free_nodes(parent->nodes[i]);
+        delete parent->nodes[i];
+    }
+}
+
+all_variants GomokuGame::_find_where_go(int AI_PLAYER, int MAX_DEPTH, int MAX_WIDTH, vector<vector<int> > map, bool USE_OPTIMIZATION){
+    int 	OTHER_PLAYER = 2;
+    int 	alpha = -2147483000;
+    int 	beta = 2147483000;
+
+    node *first_node = new node;
     first_node->parent = nullptr;
-    first_node->map_in_node = MAP;//read_from_file();
+    first_node->map_in_node = map;
     first_node->size = first_node->map_in_node.size();
     first_node->level_depth = 0;
-    first_node->x = 0;
-    first_node->y = 0;
-    first_node->now_player = START_PLAYER;
+    first_node->x = -1;
+    first_node->y = -1;
+    first_node->now_player = AI_PLAYER;
     first_node->other_player = OTHER_PLAYER;
     first_node->win = false;
     first_node->cross_map = first_node->map_in_node;
@@ -594,88 +738,24 @@ all_variants	GomokuGame::_find_MF(int START_PLAYER, int MAX_DEPTH, int MAX_WIDTH
         for (int y = 0; y < first_node->size; ++y)
             first_node->cross_map[x][y] = 0;
     first_node->cross_map_not_you = first_node->cross_map;
-    make_childs(first_node, MAX_DEPTH, MAX_WIDTH, START_PLAYER);
-    all_variants ret;
-    ret.num = START_PLAYER;
-    ret._x = first_node->y;
-    ret._y = first_node->x;
-    return ret;
+    minimax(first_node, MAX_DEPTH, MAX_WIDTH, AI_PLAYER, alpha, beta, true, USE_OPTIMIZATION);
+
+    all_variants  result;
+    result.num = NUM_NODE;
+    result._x = first_node->y;
+    result._y = first_node->x;
+
+    free_nodes(first_node);
+    delete first_node;
+
+    return result;
 }
-
-void 	checkH(vector<int>  tmp, int now_player, vector<int> &how_many_nums){
-    int num = 0;
-    int left_i = -1;
-    for (int i = 0; i < tmp.size(); ++i){
-        if (tmp[i] == now_player){
-            if (i > 0 and tmp[i-1] == 0)
-                left_i = i-1;
-            num++;
-        }
-        else
-        {
-            if(num and (tmp[i] == 0 or left_i != -1))
-                how_many_nums[num - 1] += 1;
-            left_i = -1;
-            num = 0;
-        }
-    }
-
-    if(num and left_i != -1)
-        how_many_nums[num - 1] += 1;
-
-}
-
-vector<vector<int> > 	read_from_file()
-{
-
-    vector<vector<int> > the_vector;
-    string s;
-    string tmp_int;
-    string tmp_s;
-
-    ifstream file("map.txt");
-    while(getline(file, s)){
-        vector<int> tmp;
-        tmp_s = "";
-        for (int i = 0; i < s.size(); ++i)
-        {
-            if (s[i] != ' '){
-                tmp_s += s[i];
-            }
-            else{
-                tmp.push_back(stoi(tmp_s));
-                tmp_s = "";
-            }
-        }
-        tmp.push_back(stoi(tmp_s));
-        tmp_s = "";
-        the_vector.push_back(tmp);
-
-    }
-
-    file.close();
-    return the_vector;
-}
-
-void 	_print(	vector<vector<int> > the_vector){
-    int size;
-    printf("\n");
-    size = the_vector.size();
-    for (int i = 0; i < size; ++i)
-    {
-        printf("%d| ", i);
-        for (int i2 = 0; i2 < size; ++i2)
-            printf("%4d", the_vector[i][i2]);
-        printf("\n");
-    }
-
-}
-
 
 vector<int>	check_not_you(vector<int>  tmp, node *now_node){
     int num = 0;
     int left_i = -1;
     vector<int>  _new(tmp.size());
+
 
     for (int i = 0; i < tmp.size(); ++i){
         if (tmp[i] != 0 and tmp[i] != now_node->now_player)
@@ -689,23 +769,24 @@ vector<int>	check_not_you(vector<int>  tmp, node *now_node){
             if(num)
             {
                 if (tmp[i] == 0){
-                    _new[i] = num > _new[i] ? num : _new[i];
-                    if (i > 2 and left_i == -1 and num == 2)//need for -1 1 1 0, if we have flang not our
-                        _new[i] = 3 > _new[i] ? 3 : _new[i];
+                    _new[i] = num;
+                    if (i > 2 and left_i == -1 and num == 2){//need for -1 1 1 0, if we have flang not our
+                        _new[i] = -3;
+                    }
                 }
                 if (left_i != -1){
-                    _new[left_i] = num > _new[left_i] ? num : _new[left_i];
-                    if (tmp[i] != 0 and tmp[i] == now_node->now_player and num == 2)//need for 0 1 1 -1, if we have flang not our
-                        _new[left_i] = 3 > _new[left_i] ? 3 : _new[left_i];
+                    _new[left_i] = num;
+                    if (tmp[i] != 0 and tmp[i] == now_node->now_player and num == 2){//need for 0 1 1 -1, if we have flang not our
+                        _new[left_i] = -3;
+                    }
                 }
             }
             left_i = -1;
             num = 0;
         }
     }
-
     if(num and left_i != -1)
-        _new[left_i] = num > _new[left_i] ? num : _new[left_i];
+        _new[left_i] = num;
     return _new;
 }
 
@@ -726,14 +807,16 @@ vector<int>	check(vector<int>  tmp, node *now_node){
             if(num)
             {
                 if (tmp[i] == 0){
-                    _new[i] = num > _new[i] ? num : _new[i];
-                    if (i > 2 and left_i == -1 and num == 2)//need for -1 1 1 0, if we have flang not our
-                        _new[i] = 3 > _new[i] ? 3 : _new[i];
+                    _new[i] = num;
+                    if (i > 2 and left_i == -1 and num == 2){//need for -1 1 1 0, if we have flang not our
+                        _new[i] = -3;
+                    }
                 }
                 if (left_i != -1){
-                    _new[left_i] = num > _new[left_i] ? num : _new[left_i];
-                    if (tmp[i] != 0 and tmp[i] != now_node->now_player and num == 2)
-                        _new[left_i] = 3 > _new[left_i] ? 3 : _new[left_i];
+                    _new[left_i] = num;
+                    if (tmp[i] != 0 and tmp[i] != now_node->now_player and num == 2){
+                        _new[left_i] = -3;
+                    }
                 }
             }
             left_i = -1;
@@ -741,65 +824,18 @@ vector<int>	check(vector<int>  tmp, node *now_node){
         }
     }
 
-    if(num and left_i != -1)
-        _new[left_i] = num > _new[left_i] ? num : _new[left_i];
-
+    if(num and left_i != -1){
+        _new[left_i] = num;
+    }
+    // for (int i = 0; i < tmp.size(); ++i)
+    // {
+    // 	printf("%d ", _new[i]);
+    // }
+    // printf("\n");
     return _new;
 }
 
 
-void	iterate_all_variants(node *nde, vector<int> &how_many_nums){
-
-    // column
-    for (int y = 0; y < nde->size ; ++y)
-    {
-        vector<int> tmp;
-        for (int x = 0; x < nde->size ; ++x)
-            tmp.push_back(nde->map_in_node[x][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-    }
-    // row
-    for (int x = 0; x < nde->size ; ++x)
-    {
-        vector<int> tmp;
-        for (int y = 0; y < nde->size ; ++y)
-            tmp.push_back(nde->map_in_node[x][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-    }
-    //diagonal_right_up
-    for (int x = 0; x < nde->size ; ++x)
-    {
-        vector<int> tmp;
-        for (int y = nde->size - 1 - x; y <= nde->size - 1; ++y)
-            tmp.push_back(nde->map_in_node[x - (nde->size - 1 - y)][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-
-    }
-    for (int x = 1; x < nde->size ; ++x)
-    {
-        vector<int> tmp;
-        for (int y = 0; y <= nde->size - 1 - x; ++y)
-            tmp.push_back(nde->map_in_node[x+y][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-    }
-    // diagonal_left_up
-    for (int x = 0; x < nde->size ; ++x)
-    {
-        vector<int> tmp;
-        for (int y = x; y >= 0; --y)
-            tmp.push_back(nde->map_in_node[x-y][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-    }
-    for (int x = 1; x < nde->size ; ++x)
-    {
-        vector<int> tmp;
-        for (int y = nde->size - 1; y >= x; --y)
-            tmp.push_back(nde->map_in_node[nde->size - 1 + x - y][y]);
-        checkH(tmp, nde->now_player, how_many_nums);
-    }
-
-
-}
 void	diagonal_left_up(node *nde, bool you){
     vector<int>  _new;
     int i;
@@ -811,17 +847,27 @@ void	diagonal_left_up(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int y = x; y >= 0; --y, i++)
+
+            for (int y = x; y >= 0; --y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[x-y][y] = -_new[i] > nde->cross_map_not_you[x-y][y] ? -_new[i] : nde->cross_map_not_you[x-y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[x-y][y] = _new[i] > nde->cross_map[x-y][y] ? _new[i] : nde->cross_map[x-y][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int y = x; y >= 0; --y, i++)
+            for (int y = x; y >= 0; --y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[x-y][y] = -_new[i] > nde->cross_map[x-y][y] ? -_new[i] : nde->cross_map[x-y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[x-y][y] = _new[i] > nde->cross_map_not_you[x-y][y] ? _new[i] : nde->cross_map_not_you[x-y][y];
+            }
         }
-
-
     }
+
     for (int x = 1; x < nde->size ; ++x)
     {
         vector<int> tmp;
@@ -831,13 +877,23 @@ void	diagonal_left_up(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int y = nde->size - 1; y >= x; --y, i++)
+            for (int y = nde->size - 1; y >= x; --y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[nde->size - 1 + x - y][y] = -_new[i] > nde->cross_map_not_you[nde->size - 1 + x - y][y] ? -_new[i] : nde->cross_map_not_you[nde->size - 1 + x - y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[nde->size - 1 + x - y][y] = _new[i] > nde->cross_map[nde->size - 1 + x - y][y] ? _new[i] : nde->cross_map[nde->size - 1 + x - y][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int y = nde->size - 1; y >= x; --y, i++)
+            for (int y = nde->size - 1; y >= x; --y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[nde->size - 1 + x - y][y] = -_new[i] > nde->cross_map[nde->size - 1 + x - y][y] ? -_new[i] : nde->cross_map[nde->size - 1 + x - y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[nde->size - 1 + x - y][y] = _new[i] > nde->cross_map_not_you[nde->size - 1 + x - y][y] ? _new[i] : nde->cross_map_not_you[nde->size - 1 + x - y][y];
+            }
         }
 
     }
@@ -856,13 +912,23 @@ void	diagonal_right_up(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int y = nde->size - 1 - x; y <= nde->size - 1; ++y, i++)
+            for (int y = nde->size - 1 - x; y <= nde->size - 1; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[x - (nde->size - 1 - y)][y] = -_new[i] > nde->cross_map_not_you[x - (nde->size - 1 - y)][y] ? -_new[i] : nde->cross_map_not_you[x - (nde->size - 1 - y)][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[x - (nde->size - 1 - y)][y] = _new[i] > nde->cross_map[x - (nde->size - 1 - y)][y] ? _new[i] : nde->cross_map[x - (nde->size - 1 - y)][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int y = nde->size - 1 - x; y <= nde->size - 1; ++y, i++)
+            for (int y = nde->size - 1 - x; y <= nde->size - 1; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[x - (nde->size - 1 - y)][y] = -_new[i] > nde->cross_map[x - (nde->size - 1 - y)][y] ? -_new[i] : nde->cross_map[x - (nde->size - 1 - y)][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[x - (nde->size - 1 - y)][y] = _new[i] > nde->cross_map_not_you[x - (nde->size - 1 - y)][y] ? _new[i] : nde->cross_map_not_you[x - (nde->size - 1 - y)][y];
+            }
         }
 
     }
@@ -874,13 +940,23 @@ void	diagonal_right_up(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int y = 0; y <= nde->size - 1 - x; ++y, i++)
+            for (int y = 0; y <= nde->size - 1 - x; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[x+y][y] = -_new[i] > nde->cross_map_not_you[x+y][y] ? -_new[i] : nde->cross_map_not_you[x+y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[x+y][y] = _new[i] > nde->cross_map[x+y][y] ? _new[i] : nde->cross_map[x+y][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int y = 0; y <= nde->size - 1 - x; ++y, i++)
+            for (int y = 0; y <= nde->size - 1 - x; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[x+y][y] = -_new[i] > nde->cross_map[x+y][y] ? -_new[i] : nde->cross_map[x+y][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[x+y][y] = _new[i] > nde->cross_map_not_you[x+y][y] ? _new[i] : nde->cross_map_not_you[x+y][y];
+            }
         }
     }
 }
@@ -898,17 +974,28 @@ void	row(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int y = 0; y < nde->size ; ++y, i++)
+            for (int y = 0; y < nde->size ; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[x][y] = -_new[i] > nde->cross_map_not_you[x][y] ? -_new[i] : nde->cross_map_not_you[x][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[x][y] = _new[i] > nde->cross_map[x][y] ? _new[i] : nde->cross_map[x][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int y = 0; y < nde->size ; ++y, i++)
+            for (int y = 0; y < nde->size ; ++y, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[x][y] = -_new[i] > nde->cross_map[x][y] ? -_new[i] : nde->cross_map[x][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[x][y] = _new[i] > nde->cross_map_not_you[x][y] ? _new[i] : nde->cross_map_not_you[x][y];
+            }
         }
 
     }
 }
+
 
 void	column(node *nde, bool you){
     vector<int>  _new;
@@ -921,13 +1008,23 @@ void	column(node *nde, bool you){
         i = 0;
         if (you){
             _new = check(tmp, nde);
-            for (int x = 0; x < nde->size ; ++x, i++)
+            for (int x = 0; x < nde->size ; ++x, i++){
+                if (_new[i] == -3){
+                    nde->cross_map_not_you[x][y] = -_new[i] > nde->cross_map_not_you[x][y] ? -_new[i] : nde->cross_map_not_you[x][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map[x][y] = _new[i] > nde->cross_map[x][y] ? _new[i] : nde->cross_map[x][y];
+            }
         }
         else{
             _new = check_not_you(tmp, nde);
-            for (int x = 0; x < nde->size ; ++x, i++)
+            for (int x = 0; x < nde->size ; ++x, i++){
+                if (_new[i] == -3){
+                    nde->cross_map[x][y] = -_new[i] > nde->cross_map[x][y] ? -_new[i] : nde->cross_map[x][y];
+                    _new[i] = 2;
+                }
                 nde->cross_map_not_you[x][y] = _new[i] > nde->cross_map_not_you[x][y] ? _new[i] : nde->cross_map_not_you[x][y];
+            }
         }
     }
 }

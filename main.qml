@@ -37,8 +37,7 @@ Window {
                         if (Math.abs(stack[i].x - newX) < 10 && Math.abs(stack[i].y - newY) < 10) {
                             stack[i].visible = false;
                             stack[i].destroy();
-                            stack.splice(i, 1);
-                            return ;
+//                            stack.splice(i, 1);
                         }
                     }
                 } else {
@@ -149,8 +148,8 @@ Window {
 
     Button {
         id: aiVsAi
-        x: 606
-        y: 204
+        x: 628
+        y: 198
         width: 192
         height: 40
         text: qsTr("AI vs AI mode")
@@ -185,8 +184,8 @@ Window {
 
     Button {
         id: reverse
-        x: 606
-        y: 314
+        x: 628
+        y: 308
         width: 192
         height: 47
         text: qsTr("Reverse game")
@@ -204,8 +203,8 @@ Window {
 
     Button {
         id: moveAIone
-        x: 606
-        y: 372
+        x: 628
+        y: 368
         width: 192
         height: 43
         text: qsTr("Help by AI")
@@ -229,8 +228,8 @@ Window {
 
     Slider {
         id: timeSlider
-        x: 606
-        y: 268
+        x: 628
+        y: 267
         width: 192
         height: 40
         value: 1.5
@@ -241,7 +240,7 @@ Window {
 
     Text {
         id: element
-        x: 606
+        x: 628
         y: 250
         text: qsTr("Sleep time for AI (now " + timeSlider.value + " sec)")
         font.pixelSize: 15
@@ -249,8 +248,8 @@ Window {
 
     Button {
         id: humanVsHuman
-        x: 606
-        y: 98
+        x: 628
+        y: 95
         width: 192
         height: 40
         text: qsTr("Human vs Human mode")
@@ -263,8 +262,8 @@ Window {
 
     Button {
         id: humanVsAi
-        x: 606
-        y: 152
+        x: 628
+        y: 147
         width: 192
         height: 40
         text: qsTr("Human vs AI mode")
@@ -289,5 +288,14 @@ Window {
         height: 21
         text: qsTr("Move #" + moveCount)
         font.pixelSize: 21
+    }
+
+    Switch {
+        id: alphaBeta
+        x: 628
+        y: 431
+        text: qsTr("Alpha-beta prooning")
+        checked: true
+        onClicked: game.alphaBetaProoning = checked
     }
 }
