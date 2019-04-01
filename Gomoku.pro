@@ -7,8 +7,7 @@ MOC_DIR = ./tmp
 RCC_DIR = ./tmp
 
 CONFIG -= app_bundle
-
-#QMAKE_CXXFLAGS += -Wall -Wextra -Werror
+QMAKE_CXXFLAGS += -Wall -Wextra -Werror
 
 DEFINES += QT_DEPRECATED_WARNINGS
 

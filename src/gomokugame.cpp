@@ -467,8 +467,6 @@ bool GomokuGame::checkPairRule(int x, int y, int player)
 
 
 
-
-
 using namespace std;
 
 size_t NUM_NODE;
@@ -651,8 +649,8 @@ int			return_heuristic(node *child, int AI_PLAYER){
         AI_player[i] = 0;
         rival_player[i] = 0;
     }
-    for (int i = 0; i < child->cross_map.size(); ++i){
-        for (int j = 0; j < child->cross_map.size(); ++j){
+    for (int i = 0; i < (int)child->cross_map.size(); ++i){
+        for (int j = 0; j < (int)child->cross_map.size(); ++j){
             if (child->now_player == AI_PLAYER){
                 tmp_ai = child->cross_map[i][j];
                 tmp_rival = child->cross_map_not_you[i][j];
@@ -681,10 +679,10 @@ int			return_heuristic(node *child, int AI_PLAYER){
         }
     }
 
-    if (child->AIcaptrue <= 5)
+    if (child->AIcaptrue > 0 && child->AIcaptrue <= 5)
         AI_player[child->AIcaptrue - 1] += 1;
 
-    if (child->HUcaptrue <= 5)
+    if (child->HUcaptrue > 0 && child->HUcaptrue <= 5)
         rival_player[child->HUcaptrue - 1] += 1;
 
     for (int i = 0; i < 5; ++i)
@@ -703,7 +701,6 @@ int			return_heuristic(node *child, int AI_PLAYER){
             child->win = true;
     }
     child->heuristics = sum;
-    // printf("heuristics:%d\n", sum);
     return sum;
 }
 
@@ -716,7 +713,7 @@ int 	choose_best_child(node *parent, bool maximizingPlayer){
     int y = parent->nodes[0]->y;
 
 
-    for (int i = 0; i < parent->nodes.size(); ++i){
+    for (int i = 0; i < (int)parent->nodes.size(); ++i){
         tmp_heur = parent->nodes[i]->heuristics;
         tmpx = parent->nodes[i]->x;
         tmpy = parent->nodes[i]->y;
@@ -762,7 +759,7 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
         return return_heuristic(parent, AI_PLAYER);
 
     most_best_variant(parent, AI_PLAYER);
-    for (int i = 0; i < parent->variants.size(); ++i){
+    for (int i = 0; i < (int)parent->variants.size(); ++i){
         if (width > 0 and checkRules(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
             int		_x_cap = 0;
             int		_y_cap = 0;
@@ -826,7 +823,7 @@ void	free_nodes(node *parent)
 {
     if (parent->nodes.size() <= 0)
         return;
-    for (int i = 0; i < parent->nodes.size(); ++i){
+    for (int i = 0; i < (int)parent->nodes.size(); ++i){
         free_nodes(parent->nodes[i]);
         delete parent->nodes[i];
     }
@@ -912,7 +909,7 @@ vector<int>	check_not_you(vector<int>  tmp, node *now_node){
     int left_i = -1;
     vector<int>  _new(tmp.size());
 
-    for (int i = 0; i < tmp.size(); ++i){
+    for (int i = 0; i < (int)tmp.size(); ++i){
         if (tmp[i] != 0 and tmp[i] != now_node->now_player)
         {
             if (i > 0 and tmp[i-1] == 0)
@@ -952,7 +949,7 @@ vector<int>	check(vector<int>  tmp, node *now_node){
 
 
 
-    for (int i = 0; i < tmp.size(); ++i){
+    for (int i = 0; i < (int)tmp.size(); ++i){
         if (tmp[i] == now_node->now_player)
         {
             if (i > 0 and tmp[i-1] == 0)
