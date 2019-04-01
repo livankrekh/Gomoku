@@ -264,6 +264,9 @@ int GomokuGame::checkAlertRule(int x, int y, int player, int dirX, int dirY)
            && x + i * dirX >= 0
            && y + i * dirY >= 0
            && matrix[y + i * dirY][x + i * dirX] == player) {
+        int currX = x + i * dirX;
+        int currY = y + i * dirY;
+
         for (int dirYN = -1; dirYN <= 1; dirYN++) {
             for (int dirXN = -1; dirXN <= 1; dirXN++) {
                 if ((dirYN == 0 && dirXN == 0)
@@ -272,13 +275,9 @@ int GomokuGame::checkAlertRule(int x, int y, int player, int dirX, int dirY)
                     continue;
                 }
 
-                int currX = x + i * dirX;
-                int currY = y + i * dirY;
-
                 if (checkVal(currX + dirXN, currY + dirYN, player)
                         && (countAlignment(currX, currY, player, dirXN, dirYN) == 1)
                         && (checkVal(currX + dirXN * 2, currY + dirYN * 2, player * -1) || checkVal(currX + dirXN * -1, currY + dirYN * -1, player * -1))) {
-                    std::cout << "CountAlignment - " << i << std::endl;
                     return i;
                 }
             }
@@ -302,12 +301,9 @@ int GomokuGame::checkWin(int x, int y, int player)
             }
 
             if (checkAlignment(x, y, dirX, dirY, 4, player) || countAlignment(x, y, player, dirX, dirY) >= 4) {
-                std::cout << "Alignment of 5" << std::endl;
                 if (checkAlertRule(x, y, player, dirX, dirY) + checkAlertRule(x, y, player, dirX * -1, dirY * -1) >= 6) {
-                    std::cout << "WIN!!!" << std::endl;
                     return 2;
                 } else {
-                    std::cout << "Check Alert not passed!" << std::endl;
                     return 1;
                 }
             }
@@ -490,7 +486,6 @@ void	most_best_variant(node *nde, int AI_PLAYER){
     int				tmp_map, tmp_map_not_you, for_tmp, youCap, otherCap;
     all_variants	tmpvar;
 
-    // printf("most_best_variant\n");
     if (nde->now_player == AI_PLAYER){
         youCap = nde->AIcaptrue;
         otherCap = nde->HUcaptrue;
@@ -499,7 +494,6 @@ void	most_best_variant(node *nde, int AI_PLAYER){
         youCap = nde->HUcaptrue;
         otherCap = nde->AIcaptrue;
     }
-    // printf("you %d  other%d\n", youCap, otherCap);
     for (int x = 0; x < nde->size; ++x)
         for (int y = 0; y < nde->size; ++y){
             tmp_map_not_you = nde->cross_map_not_you[x][y];
@@ -518,7 +512,6 @@ void	most_best_variant(node *nde, int AI_PLAYER){
                 if (youCap >= otherCap)
                     tmp_map += 1;
             }
-            // printf("x:%d y:%d %d %d\n",x, y,tmp_map, tmp_map_not_you );
 
 
             if (tmp_map_not_you < 0){
@@ -542,14 +535,8 @@ void	most_best_variant(node *nde, int AI_PLAYER){
                 nde->variants.push_back(tmpvar);
             }
             nde->cross_map[x][y] = tmp_map + tmp_map_not_you;
-            // printf("%d\n", nde->cross_map[x][y]);
         }
     sort(nde->variants.begin(), nde->variants.end(), compare_variants);
-
-    // for (int i = 0; i < nde->variants.size(); ++i)
-    // {
-    // 	printf("Sum %lu  x:%d y:%d\n", nde->variants[i].num, nde->variants[i]._x, nde->variants[i]._y);
-    // }
 }
 
 
@@ -706,7 +693,6 @@ int			return_heuristic(node *child, int AI_PLAYER){
 
 
 int 	choose_best_child(node *parent, bool maximizingPlayer){
-    // printf("choose_best_child\n");
     int tmp_heur, tmpx, tmpy;
     int heur = parent->nodes[0]->heuristics;
     int x = parent->nodes[0]->x;
@@ -732,7 +718,6 @@ int 	choose_best_child(node *parent, bool maximizingPlayer){
             }
         }
     }
-    // printf("heur %d %d %d\n", heur, x, y);
     parent->heuristics = heur;
     if (parent->level_depth == 0){
         parent->x = x;
@@ -794,7 +779,6 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
                     tmpvar._x = _x_cap;
                     tmpvar._y = _y_cap;
                     child_tmp->variants.push_back(tmpvar);
-                    // printf("next must be   x:%d y:%x\n", _x_cap, _y_cap);
                 }
                 result = minimax(parent->nodes[child_num], MAX_DEPTH, MAX_WIDTH, AI_PLAYER, alpha, beta, !maximizingPlayer, USE_OPTIMIZATION);
                 child_num += 1;
@@ -1008,10 +992,8 @@ void	diagonal_left_up(node *nde){
 
         vector<int> tmp;
         for (int y = nde->size - 1; y >= x; --y){
-            // printf("%4d", nde->map_in_node[nde->size - 1 + x - y][y]);
             tmp.push_back(nde->map_in_node[nde->size - 1 + x - y][y]);
         }
-        // printf("\n");
         i = 0;
         _you = check(tmp, nde);
         _not_you = check_not_you(tmp, nde);

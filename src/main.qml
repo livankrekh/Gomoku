@@ -41,8 +41,6 @@ Window {
                         if (Math.abs(stack[i].x - newX) < 10 && Math.abs(stack[i].y - newY) < 10) {
                             stack[i].visible = false;
                             stack[i].destroy();
-                            stack.slice(i, 1);
-                            return ;
                         }
                     }
                 } else {
