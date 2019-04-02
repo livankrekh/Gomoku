@@ -8,6 +8,8 @@ Three::~Three()
 {
 }
 
+all_variants captureLoc[2];
+
 GomokuGame::GomokuGame() : QObject()
 {
     for (int i = 0; i < GOBAN_SIZE; i++) {
@@ -25,6 +27,10 @@ GomokuGame::GomokuGame() : QObject()
     prooning = true;
     threeWidth = 3;
     threeDeep = 5;
+    captureLoc[0]._x = -1;
+    captureLoc[0]._y = -1;
+    captureLoc[1]._x = -1;
+    captureLoc[1]._y = -1;
 }
 
 GomokuGame::~GomokuGame()
@@ -278,6 +284,13 @@ int GomokuGame::checkAlertRule(int x, int y, int player, int dirX, int dirY)
                 if (checkVal(currX + dirXN, currY + dirYN, player)
                         && (countAlignment(currX, currY, player, dirXN, dirYN) == 1)
                         && (checkVal(currX + dirXN * 2, currY + dirYN * 2, player * -1) || checkVal(currX + dirXN * -1, currY + dirYN * -1, player * -1))) {
+                    if (checkVal(currX + dirXN * 2, currY + dirYN * 2, player * -1)) {
+                        captureLoc[player == -1 ? 0 : 1]._x = currX + dirXN * -1;
+                        captureLoc[player == -1 ? 0 : 1]._y = currY + dirYN * -1;
+                    } else if (checkVal(currX + dirXN * -1, currY + dirYN * -1, player * -1)) {
+                        captureLoc[player == -1 ? 0 : 1]._x = currX + dirXN * 2;
+                        captureLoc[player == -1 ? 0 : 1]._y = currY + dirYN * 2;
+                    }
                     return i;
                 }
             }
@@ -308,6 +321,12 @@ int GomokuGame::checkWin(int x, int y, int player)
                 }
             }
         }
+    }
+
+    if (captureLoc[player == -1 ? 0 : 1]._x != -1
+            && captureLoc[player == -1 ? 0 : 1]._x == x
+            && captureLoc[player == -1 ? 0 : 1]._y == y) {
+        return 2;
     }
 
     return 0;

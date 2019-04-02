@@ -107,12 +107,12 @@ Window {
         id: popupWin
         x: 250
         y: 250
-        width: 250
+        width: 300
         height: 40
         modal: true
         focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         contentItem: Text {
             text: "Congratulations! Win player - "
         }
