@@ -157,10 +157,10 @@ Window {
         text: qsTr("AI vs AI mode")
         font.pointSize: 22
 
-//        SoundEffect {
-//            id: playSound
-//            source: "imgs/AIvoice.wav"
-//        }
+        SoundEffect {
+            id: playSound
+            source: "imgs/AIvoice.wav"
+        }
 
         Timer {
             id: timer
@@ -184,7 +184,7 @@ Window {
         }
 
         onClicked: {
-//            playSound.play();
+            playSound.play();
             timer.running = true;
             playMode = 2;
         }
@@ -342,7 +342,7 @@ Window {
         y: 198
         checked: playMode === 2
         onClicked: {
-//            playSound.play();
+            playSound.play();
             timer.running = true;
             playMode = 2;
         }

@@ -444,6 +444,9 @@ bool GomokuGame::checkTwoThrees(int x, int y, int player)
 
 bool GomokuGame::checkRules(int x, int y, int player)
 {
+    if (checkVal(x, y, player) || checkVal(x, y, player * -1)) {
+        return false;
+    }
     return !checkTwoThrees(x, y, player);
 }
 
@@ -751,6 +754,9 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
     int		child_num = 0;
     int		value = 2147483000;
     int		result;
+    int     xcap = -1;
+    int     ycap = -1;
+    int     now_player;
     if (maximizingPlayer)
         value = -2147483000;
 
@@ -765,8 +771,7 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
     most_best_variant(parent, AI_PLAYER);
     for (int i = 0; i < (int)parent->variants.size(); ++i){
         if (width > 0 and checkRules(parent->variants[i]._y, parent->variants[i]._x, parent->now_player)){
-            int		_x_cap = 0;
-            int		_y_cap = 0;
+
             int		res = this_win_finally(parent->variants[i]._y, parent->variants[i]._x, parent->now_player, parent->map_in_node);
             if (res == 1){
                 if (maximizingPlayer)
@@ -793,11 +798,35 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
                 }
                 width--;
                 if (res == 2){
+
                     all_variants  tmpvar;
-                    tmpvar.num = 10000000000;
-                    tmpvar._x = _x_cap;
-                    tmpvar._y = _y_cap;
-                    child_tmp->variants.push_back(tmpvar);
+                    now_player = child_tmp->now_player;
+
+                    tmpvar.num = 10000000001;
+
+
+                    xcap = captureLoc[parent->now_player == 1 ? 1 : 0]._x;
+                    ycap = captureLoc[parent->now_player == 1 ? 1 : 0]._y;
+                    tmpvar._x = ycap;
+                    tmpvar._y = xcap;
+                    if (xcap != -1)
+                       child_tmp->variants.push_back(tmpvar);
+
+                    all_variants  tmpvar2;
+                    now_player = child_tmp->now_player;
+
+                    tmpvar2.num = 10000000000;
+
+
+                    xcap = captureLoc[parent->now_player == 1 ? 0 : 1]._x;
+                    ycap = captureLoc[parent->now_player == 1 ? 0 : 1]._y;
+                    tmpvar2._x = ycap;
+                    tmpvar2._y = xcap;
+                    if (xcap != -1)
+                       child_tmp->variants.push_back(tmpvar2);
+                    if (child_tmp->level_depth < MAX_DEPTH - 1)
+                        child_tmp->level_depth = MAX_DEPTH - 1;
+
                 }
                 result = minimax(parent->nodes[child_num], MAX_DEPTH, MAX_WIDTH, AI_PLAYER, alpha, beta, !maximizingPlayer, USE_OPTIMIZATION);
                 child_num += 1;
