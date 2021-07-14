@@ -756,7 +756,7 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
     int		result;
     int     xcap = -1;
     int     ycap = -1;
-    int     now_player;
+    
     if (maximizingPlayer)
         value = -2147483000;
 
@@ -800,7 +800,6 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
                 if (res == 2){
 
                     all_variants  tmpvar;
-                    now_player = child_tmp->now_player;
 
                     tmpvar.num = 10000000001;
 
@@ -813,7 +812,6 @@ int	GomokuGame::minimax(node *parent, int MAX_DEPTH ,int MAX_WIDTH, int AI_PLAYE
                        child_tmp->variants.push_back(tmpvar);
 
                     all_variants  tmpvar2;
-                    now_player = child_tmp->now_player;
 
                     tmpvar2.num = 10000000000;
 
