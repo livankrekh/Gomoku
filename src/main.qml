@@ -5,8 +5,8 @@ import QtMultimedia 5.8
 
 Window {
     visible: true
-    width: 860
-    height: 600
+    width: 1200
+    height: 800
     maximumHeight: 600
     minimumHeight: 600
     maximumWidth: 860
@@ -152,10 +152,10 @@ Window {
         id: aiVsAi
         x: 628
         y: 198
-        width: 192
+        width: 200
         height: 40
         text: qsTr("AI vs AI mode")
-        font.pointSize: 22
+        font.pointSize: 18
 
         SoundEffect {
             id: playSound
@@ -194,10 +194,10 @@ Window {
         id: reverse
         x: 628
         y: 308
-        width: 192
+        width: 200
         height: 33
         text: qsTr("Reverse game")
-        font.pointSize: 22
+        font.pointSize: 18
 
         onClicked: {
             customPlayer *= -1;
@@ -213,10 +213,10 @@ Window {
         id: moveAIone
         x: 628
         y: 347
-        width: 192
+        width: 200
         height: 32
         text: qsTr("Help by AI")
-        font.pointSize: 22
+        font.pointSize: 18
         onClicked: {
             if (timer.running === true) {
                 return ;
@@ -266,10 +266,10 @@ Window {
         id: humanVsHuman
         x: 628
         y: 95
-        width: 192
+        width: 200
         height: 40
-        text: qsTr("Human vs Human mode")
-        font.pointSize: 15
+        text: qsTr("Human vs Human")
+        font.pointSize: 14
         onClicked: {
             timer.running = false;
             playMode = 0;
@@ -291,10 +291,10 @@ Window {
         id: humanVsAi
         x: 628
         y: 147
-        width: 192
+        width: 200
         height: 40
         text: qsTr("Human vs AI mode")
-        font.pointSize: 19
+        font.pointSize: 16
         onClicked: humanVsAiOn()
     }
 
